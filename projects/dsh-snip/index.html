@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DSH-SNIP · 截图标注插件</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#05080F;
+  --panel:#0B111E;
+  --panel-2:#101828;
+  --line:rgba(120,160,200,.16);
+  --line-strong:rgba(0,229,192,.35);
+  --ink:#E7EEF7;
+  --ink-dim:#8A9AB0;
+  --ink-faint:#5B6B80;
+  --cyan:#00E5C0;
+  --amber:#FFB454;
+  --red:#FF5C6C;
+  --mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+  --sans:'Space Grotesk','Segoe UI',system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  background:var(--bg);
+  color:var(--ink);
+  font-family:var(--sans);
+  line-height:1.6;
+  min-height:100vh;
+  background-image:
+    linear-gradient(rgba(120,160,200,.035) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(120,160,200,.035) 1px,transparent 1px);
+  background-size:48px 48px;
+}
+body::before{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:50;
+  background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,.06) 4px);
+  opacity:.5;
+}
+.wrap{max-width:1180px;margin:0 auto;padding:0 28px}
+
+/* topbar */
+.topbar{
+  border-bottom:1px solid var(--line);
+  padding:16px 0;
+  display:flex;align-items:center;justify-content:space-between;
+  font-family:var(--mono);font-size:11px;letter-spacing:.08em;color:var(--ink-dim);
+}
+.back{display:flex;align-items:center;gap:9px;color:var(--ink-dim);text-decoration:none;transition:color .2s}
+.back:hover{color:var(--cyan)}
+.back .arrow{color:var(--cyan);font-size:14px}
+.sys{display:flex;gap:22px;align-items:center}
+.dot{display:inline-block;width:6px;height:6px;background:var(--cyan);border-radius:50%;margin-right:7px;box-shadow:0 0 8px var(--cyan)}
+
+/* hero */
+.hero{padding:64px 0 44px;border-bottom:1px solid var(--line);position:relative}
+.tag{
+  display:inline-flex;align-items:center;gap:8px;
+  font-family:var(--mono);font-size:11px;letter-spacing:.12em;color:var(--cyan);
+  border:1px solid var(--line-strong);padding:5px 11px;margin-bottom:24px;
+}
+.tag::before{content:"";width:5px;height:5px;background:var(--cyan)}
+h1{font-size:clamp(38px,6vw,68px);font-weight:700;letter-spacing:-.045em;line-height:1.02}
+h1 .slash{color:var(--cyan)}
+.lead{margin-top:20px;max-width:640px;font-size:17px;color:var(--ink-dim);text-wrap:pretty}
+.meta-row{margin-top:30px;display:flex;flex-wrap:wrap;gap:10px}
+.chip{
+  font-family:var(--mono);font-size:11px;letter-spacing:.04em;
+  border:1px solid var(--line);padding:6px 11px;color:var(--ink-dim);
+}
+.chip b{color:var(--ink);font-weight:500}
+
+/* section head */
+.sec-head{display:flex;align-items:baseline;gap:14px;padding:52px 0 22px}
+.sec-num{font-family:var(--mono);font-size:12px;color:var(--cyan)}
+.sec-head h2{font-size:22px;font-weight:600;letter-spacing:-.02em}
+.sec-head .note{font-family:var(--mono);font-size:11px;color:var(--ink-faint);margin-left:auto}
+
+/* demo grid */
+.demo{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,.9fr);gap:28px;align-items:start}
+.screen{
+  position:relative;border:1px solid var(--line-strong);background:var(--panel);
+  padding:13px;box-shadow:0 0 0 1px rgba(0,229,192,.05),0 24px 60px rgba(0,0,0,.5);
+}
+.screen::before,.screen::after{content:"";position:absolute;width:11px;height:11px;border-color:var(--cyan);pointer-events:none}
+.screen::before{top:-1px;left:-1px;border-top:2px solid;border-left:2px solid}
+.screen::after{bottom:-1px;right:-1px;border-bottom:2px solid;border-right:2px solid}
+.screen-bar{display:flex;align-items:center;justify-content:space-between;font-family:var(--mono);font-size:10px;color:var(--ink-faint);letter-spacing:.06em;margin-bottom:11px}
+.screen-bar .rec{display:flex;align-items:center;gap:6px;color:var(--red)}
+.screen-bar .rec i{width:6px;height:6px;background:var(--red);border-radius:50%;display:block;animation:blink 1.6s infinite}
+@keyframes blink{0%,60%{opacity:1}80%{opacity:.25}100%{opacity:1}}
+.shot{position:relative;aspect-ratio:1080/675;overflow:hidden;background:#1a1f28}
+.shot img{width:100%;height:100%;display:block;object-fit:cover}
+.hl{position:absolute;border:2px solid var(--cyan);opacity:0;transition:all .35s ease;pointer-events:none}
+.hl.on{opacity:1}
+.hl.dim{box-shadow:0 0 0 9999px rgba(3,6,12,.42)}
+.hl-red{border-color:var(--red)}
+.hl-amber{border-color:var(--amber)}
+.hl-label{
+  position:absolute;font-family:var(--mono);font-size:10px;letter-spacing:.05em;
+  background:var(--cyan);color:#04120F;padding:3px 7px;opacity:0;transition:opacity .3s;white-space:nowrap;
+}
+.hl-label.on{opacity:1}
+.hl-label.red{background:var(--red);color:#1a0508}
+.hl-label.amber{background:var(--amber);color:#1a1004}
+
+/* steps */
+.steps{display:flex;flex-direction:column;gap:9px}
+.step{
+  border:1px solid var(--line);background:var(--panel);padding:15px 17px;
+  cursor:pointer;transition:all .22s;position:relative;text-align:left;color:inherit;font-family:inherit;width:100%;
+}
+.step:hover{border-color:rgba(0,229,192,.4);background:var(--panel-2)}
+.step.active{border-color:var(--cyan);background:linear-gradient(90deg,rgba(0,229,192,.09),transparent)}
+.step.active::before{content:"";position:absolute;left:-1px;top:-1px;bottom:-1px;width:2px;background:var(--cyan)}
+.step-top{display:flex;align-items:center;gap:11px;margin-bottom:7px}
+.step-k{font-family:var(--mono);font-size:10px;color:var(--cyan);letter-spacing:.1em}
+.step-key{font-family:var(--mono);font-size:10px;color:var(--amber);border:1px solid rgba(255,180,84,.35);padding:2px 7px;margin-left:auto}
+.step h3{font-size:15px;font-weight:600;letter-spacing:-.01em}
+.step p{font-size:13px;color:var(--ink-dim);line-height:1.55}
+.hint{font-family:var(--mono);font-size:11px;color:var(--ink-faint);margin-top:14px;line-height:1.7}
+
+/* specs */
+.spec-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}
+.spec{border:1px solid var(--line);background:var(--panel);padding:20px 22px}
+.spec .k{font-family:var(--mono);font-size:10px;letter-spacing:.12em;color:var(--cyan);margin-bottom:10px}
+.spec h4{font-size:15px;font-weight:600;margin-bottom:8px}
+.spec p{font-size:13px;color:var(--ink-dim)}
+.spec code{font-family:var(--mono);font-size:11px;color:var(--amber);background:rgba(255,180,84,.07);padding:2px 5px}
+
+.note-box{border-left:2px solid var(--amber);background:rgba(255,180,84,.05);padding:16px 20px;margin-top:26px;font-size:13px;color:var(--ink-dim)}
+.note-box b{color:var(--amber);font-weight:600;font-family:var(--mono);font-size:11px;letter-spacing:.06em;display:block;margin-bottom:6px}
+
+footer{border-top:1px solid var(--line);margin-top:60px;padding:26px 0 44px;font-family:var(--mono);font-size:11px;color:var(--ink-faint);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+footer a{color:var(--ink-dim);text-decoration:none}
+footer a:hover{color:var(--cyan)}
+
+@media(max-width:880px){
+  .demo{grid-template-columns:1fr}
+  .sys span:nth-child(2){display:none}
+  .hero{padding:44px 0 36px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="topbar">
+  <a class="back" href="../index.html"><span class="arrow">←</span> RETURN TO INDEX</a>
+  <div class="sys"><span><i class="dot"></i>SYS ONLINE</span><span>DSH-PLUGIN / 001</span><span>WIN 10·11</span></div>
+</div>
+
+<header class="hero">
+  <div class="tag"><span>TOOL</span> / DEEPSEEK HARNESS PLUGIN</div>
+  <h1>DSH<span class="slash">/</span>SNIP</h1>
+  <p class="lead">Snipaste 风格的截图标注插件。任意界面按 F1，整屏定格压暗，框选区域后画红框、写文字，完成后标注图自动进入对话框。</p>
+  <div class="meta-row">
+    <span class="chip">TYPE <b>桌面插件</b></span>
+    <span class="chip">CORE <b>PowerShell + WinForms</b></span>
+    <span class="chip">HOTKEY <b>F1</b></span>
+    <span class="chip">PLATFORM <b>Windows 10/11</b></span>
+    <span class="chip">LICENSE <b>MIT</b></span>
+  </div>
+</header>
+
+<div class="sec-head"><span class="sec-num">01</span><h2>交互流程演示</h2><span class="note">点击右侧步骤切换视图</span></div>
+
+<div class="demo">
+  <div class="screen">
+    <div class="screen-bar"><span>CAPTURE SESSION / LIVE PREVIEW</span><span class="rec"><i></i>REC</span></div>
+    <div class="shot" id="shot">
+      <img src="docs/overlay.png" alt="截图标注插件运行时的界面截图：整屏压暗、白色选区、红色方框与文字标注、底部工具条">
+      <div class="hl dim" id="hl1" style="left:0;top:0;width:100%;height:100%"></div>
+      <div class="hl" id="hl2" style="left:22%;top:21%;width:56%;height:58%"></div>
+      <div class="hl hl-red" id="hl3" style="left:24.5%;top:25.5%;width:18.5%;height:14.5%"></div>
+      <div class="hl hl-red" id="hl4" style="left:24.5%;top:43%;width:39%;height:8%"></div>
+      <div class="hl hl-amber" id="hl5" style="left:22%;top:79.5%;width:26%;height:8.5%"></div>
+      <span class="hl-label" id="lb1" style="left:8px;top:8px">01 / FREEZE FRAME</span>
+      <span class="hl-label" id="lb2" style="left:22%;top:calc(21% - 22px)">02 / SELECT REGION</span>
+      <span class="hl-label red" id="lb3" style="left:24.5%;top:calc(25.5% - 22px)">03 / ANNOTATE</span>
+      <span class="hl-label amber" id="lb5" style="left:22%;top:calc(79.5% - 22px)">04 / COMMIT</span>
+    </div>
+  </div>
+
+  <div class="steps" id="steps">
+    <button class="step active" data-s="1">
+      <div class="step-top"><span class="step-k">STEP 01</span><span class="step-key">F1 / 剪刀图标</span></div>
+      <h3>触发截图</h3>
+      <p>宿主注册的全局热键，即使 DeepSeek Harness 在后台、焦点在别的窗口也能唤起。屏幕整体定格压暗，包括任务栏与其他应用。</p>
+    </button>
+    <button class="step" data-s="2">
+      <div class="step-top"><span class="step-k">STEP 02</span><span class="step-key">DRAG</span></div>
+      <h3>框选区域</h3>
+      <p>拖动鼠标框选目标区域，松手后选区恢复亮度。可拖边角微调、拖框内移动；直接按 Enter 则取整屏。</p>
+    </button>
+    <button class="step" data-s="3">
+      <div class="step-top"><span class="step-k">STEP 03</span><span class="step-key">BOX / TEXT</span></div>
+      <h3>画框标注</h3>
+      <p>Box 在选区里拖出红色方框，可画多个；Text 点一下就地输入文字，滚轮实时调字号（8–200 px）。Esc 退出，Enter 确认。</p>
+    </button>
+    <button class="step" data-s="4">
+      <div class="step-top"><span class="step-k">STEP 04</span><span class="step-key">DONE</span></div>
+      <h3>合成投递</h3>
+      <p>标注图按原始分辨率合成为 PNG，自动作为附件放进当前输入框；同时写入剪贴板兜底。页面里不出现任何截图预览。</p>
+    </button>
+  </div>
+</div>
+<p class="hint">↑ 图中高亮框为演示标注，原图为插件真实运行截图 · 来源：dsh-snip/docs/overlay.png</p>
+
+<div class="sec-head"><span class="sec-num">02</span><h2>设计要点</h2><span class="note">ENGINEERING NOTES</span></div>
+<div class="spec-grid">
+  <div class="spec"><div class="k">ARCHITECTURE</div><h4>宿主半 + 浏览器半</h4><p><code>lib/index.js</code> 拉起浮层与热键助手；<code>client/index.js</code> 只负责一颗按钮和轮询取结果。两端通过文件队列通信，不用 stdio 管道。</p></div>
+  <div class="spec"><div class="k">GLOBAL HOTKEY</div><h4>真正的系统级 F1</h4><p><code>RegisterHotKey</code> 抢注 F1，常驻助手在按下时拉起同一个浮层。父进程消失后 300 ms 内自杀，不留孤儿进程、不占着热键。</p></div>
+  <div class="spec"><div class="k">ENCODING</div><h4>纯 ASCII 的 PowerShell</h4><p><code>overlay.ps1</code> 全 ASCII 编写，规避 PowerShell 5.1 的编码坑。全屏 TopMost 窗口抓的是浮层出现前一帧，不会截到浮层自己。</p></div>
+  <div class="spec"><div class="k">INSTALL</div><h4>一条命令安装</h4><p><code>dsh plugin --profile desktop add github:XXP-AI-SPACE/dsh-snip</code><br>装完冷启动桌面端，浏览器半刷新页面即可。</p></div>
+</div>
+
+<div class="note-box"><b>展示说明 / DISPLAY NOTE</b>这是一个 Windows 桌面插件，核心逻辑是本地 PowerShell 脚本，无法在网页中真实运行。本页用真实运行截图 + 分步高亮演示它的交互流程。完整源码、安装与自检命令见 <a href="README.md" style="color:var(--cyan)">README.md</a> 及 GitHub 仓库。</div>
+
+<footer><span>DSH-SNIP / PORTFOLIO DEMO</span><span><a href="https://github.com/XXP-AI-SPACE/dsh-snip" target="_blank" rel="noopener">VIEW SOURCE ↗</a></span></footer>
+</div>
+
+<script>
+(function(){
+  var steps=document.querySelectorAll('.step');
+  var hls=[1,2,3,4,5].map(function(i){return document.getElementById('hl'+i)});
+  var lbs=[1,2,3,5].map(function(i){return document.getElementById('lb'+i)});
+  function setStage(n){
+    hls.forEach(function(el){el.classList.remove('on')});
+    lbs.forEach(function(el){el.classList.remove('on')});
+    var map={1:[1],2:[2],3:[3,4],4:[5]};
+    (map[n]||[]).forEach(function(idx){
+      if(idx===1){hls[0].classList.add('on')}
+      else{hls[idx-1].classList.add('on')}
+    });
+    var lbMap={1:0,2:1,3:2,4:3};
+    if(lbMap[n]!==undefined)lbs[lbMap[n]].classList.add('on');
+    steps.forEach(function(s){s.classList.toggle('active',+s.dataset.s===n)});
+  }
+  steps.forEach(function(s){s.addEventListener('click',function(){setStage(+s.dataset.s)})});
+  setStage(1);
+})();
+</script>
+</body>
+</html>

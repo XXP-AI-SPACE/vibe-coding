@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>赛车特技小游戏 · 框架与素材方案 v2.2（2026-10-18）</title>
+<style>
+:root{
+  --ink:#1a1a1a; --ink2:#4a4a4a; --ink3:#7a7a7a;
+  --line:#e0ddd5; --line2:#c9c5bb;
+  --bg:#ffffff; --bg2:#faf8f4; --bg3:#f2efe8;
+  --accent:#b4472e; --accent2:#e8dcc8;
+  --ok:#3b6d11; --warn:#a8630b; --bad:#a32d2d;
+}
+*{box-sizing:border-box}
+body{
+  margin:0; padding:0; background:var(--bg2); color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Helvetica Neue",sans-serif;
+  font-size:15px; line-height:1.75;
+}
+.wrap{max-width:920px; margin:0 auto; padding:56px 40px 80px; background:var(--bg);
+  box-shadow:0 0 0 1px var(--line);}
+header{border-bottom:2px solid var(--ink); padding-bottom:20px; margin-bottom:36px}
+h1{font-size:26px; font-weight:600; margin:0 0 8px; letter-spacing:-0.2px}
+.meta{font-size:13px; color:var(--ink3)}
+h2{font-size:19px; font-weight:600; margin:44px 0 14px; padding-top:22px; border-top:1px solid var(--line)}
+h2:first-of-type{border-top:none; padding-top:0}
+h3{font-size:15px; font-weight:600; margin:26px 0 10px; color:var(--ink)}
+p{margin:0 0 14px}
+ul,ol{margin:0 0 14px; padding-left:22px}
+li{margin-bottom:6px}
+table{width:100%; border-collapse:collapse; margin:14px 0 20px; font-size:13.5px}
+th{background:var(--bg3); text-align:left; padding:9px 11px; font-weight:600; border:1px solid var(--line); font-size:13px}
+td{padding:9px 11px; border:1px solid var(--line); vertical-align:top}
+td.num{font-variant-numeric:tabular-nums; white-space:nowrap}
+.lead{background:var(--bg3); border-left:3px solid var(--accent); padding:16px 20px; margin:0 0 22px; font-size:14.5px}
+.lead b{color:var(--accent)}
+.callout{border:1px solid var(--line2); background:var(--bg2); padding:14px 18px; margin:16px 0; font-size:14px}
+.callout .t{font-weight:600; margin-bottom:6px}
+.k{background:var(--accent2); padding:1px 5px; border-radius:3px; font-size:13px}
+.tag{display:inline-block; font-size:12px; padding:2px 8px; border-radius:10px; margin-right:6px}
+.tag-hi{background:#fbe4dc; color:var(--accent)}
+.tag-md{background:#fbeec9; color:var(--warn)}
+.tag-lo{background:#e6efd8; color:var(--ok)}
+figure{margin:22px 0; padding:18px 0; background:var(--bg2); border:1px solid var(--line)}
+figure svg{display:block; margin:0 auto}
+figcaption{font-size:12.5px; color:var(--ink3); text-align:center; margin-top:10px; padding:0 20px}
+code{background:var(--bg3); padding:1px 6px; border-radius:3px; font-family:ui-monospace,Menlo,Consolas,monospace; font-size:13px}
+.formula{background:var(--bg3); padding:14px 18px; margin:14px 0; font-family:ui-monospace,Menlo,Consolas,monospace; font-size:13.5px; line-height:1.9; border-left:3px solid var(--line2)}
+.pending{color:var(--bad); font-weight:600}
+footer{margin-top:56px; padding-top:20px; border-top:1px solid var(--line); font-size:12.5px; color:var(--ink3)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>赛车特技小游戏 · 框架与素材方案 v2.2</h1>
+  <div class="meta">日期：2026-10-18 ｜ 平台：网页（触屏 + 桌面）｜ 视角：纯侧视横版卷轴 ｜ 状态：拷问定稿 + v2.1 补丁（D：旋转阈值 1.25 → 1.40 s）+ v2.2 补丁（5 辆版）｜ 用户信心 9/10 ｜ 前作：v1（2026-10-16，斜 45° 小程序，已转向）</div>
+</header>
+
+<div class="lead">
+<b>一句话：</b>侧视横版卷轴网页游戏——驾车右行，躲连续 5 辆刹车失灵的对向车；按住越久跳得越高、翻滚圈数越多，但落地姿势必须接近水平（±30°），凌空可轻触修正（扣圈数信用）。通关分 = 全部起跳均值；撞车 / 摔车 / 顶广告牌 = 坠毁，0 分。<br>
+<b>核心洞察：</b>跳跃高度与翻滚圈数不是两个轴，而是同一个变量（按住时长）的两支指针——评分公式因此不制造决策；真正的决策在赛道：间距曲线把「滞空」变成成本，盲间距把每一次贪跳变成赌局。<b>懒人公式：得分 ≈ 按住秒数 × 2.7 − 2.25</b>（≥1.40 s 起算，封顶 10）。
+</div>
+
+<div class="callout">
+<div class="t">v2.1 补丁说明（2026-10-18 午后 · D 选项，一动参数）</div>
+对向车高确认为 <b>1.8 m</b> 后，与原小跳顶点 1.44 × 1.25 = <b>1.80 m 相撞</b>——小跳余量压缩到 0.05 m 以下、干净释放窗不足 0.04 s，「恒安全保底技」作废。修复：旋转阈值 1.25 → <b>1.40 s</b>（保住 3 圈 tier 与阶梯形状；被否决项：A 全盘接受地板太紧、B 爬升率回 1.6 会丢掉 3 圈 tier）。连锁更新：圈数原点迁移（L = t − 1.40）、上限 3.26 → 3.11、公式锚点与懒人系数、终局节奏模型显式化（每辆都跳 vs 隔辆穿越）、评分聚合口径。详见 §2 / §3 / §5 / §6。
+</div>
+
+<div class="callout">
+<div class="t">v2.2 补丁说明（2026-10-18 傍晚 · M1 实测反馈：10 辆 → 5 辆）</div>
+用户试玩反馈「跳过 10 辆太长了」。改动只有一个参数：<b>通关条件 carsToClear 10 → 5</b>，其余全部不动——评分公式、修正语义、参数链、警示 / 广告牌 / 会话结构原样生效。连锁更新：难度曲线四段 t_g 边界不变、车次重映射为 1 / 2–3 / 4 / 5（§6 表格与图 3 已重画）；聚合口径「≤10 次」→「≤5 次」；单局从 15–55 s 压到约 5–30 s（§7）；决策日志 #17 存档。回归测试 40/40 通过（1 圈 bot 5/5 通关、均分 4.26；贪心 bot 两个种子照死于第 2 / 第 4 辆）。
+</div>
+
+<div class="callout">
+<div class="t">v2.2 勘误（2026-10-18 晚 · 交付前排查，6 项 bot 压测 `.workbuddy/m1_audit_bots.js`）</div>
+用户实测确认 4→5 间隙可过（1 圈基本线按下窗 0.29–1.19 s），<b>间距曲线维持不改</b>。排查发现的问题全部是文档精度与教学措辞，机制层无需重烤：
+① <b>10.0 分不可达</b>——帽点自动松手 θ=41° 超 ±30° 窗，不轻触必摔、轻触 1 次 = 9.85；干净上限 4.40 s 三圈 = 9.69，窗后缘 4.483 s 刀锋 9.78–9.92（§3 表、§5 已勘误）；
+② <b>半圈档（1.5 / 2.5 圈）是陷阱不是技法</b>——松手角 180°，需 6 taps（0.65 s 内 ≈9 次/s）人类不可达，bot 实测第 1 辆即倒栽葱；
+③ <b>§6 终局章节是 10 辆版旧框架</b>——5 辆版终局实为「车 4 落地 → 车 5 按下」的过渡窗，已按 bot 实测重写（稳健线 20/20 均分 5.39 / glory 线 20/20 均分 5.67）；
+④ <b>轻触修正是基本技组成部分</b>——松手噪声 ±160 ms + 人类反应下，不轻触 0/40、带轻触 40/40；「1 圈 + 1 tap」才是人类基本线，干净松手是专家线（教学措辞已跟进）；
+⑤ <b>tgBand(0) = [6,7] 是死代码</b>——首间隙实际取车 2 档（4.5–6 s），文档「车 1 = 6–7 s」从未生效，曲线表改按间隙叙述；
+⑥ 小跳松手窗下沿精度 [1.21, 1.40] → <b>[1.25, 1.40]</b>（低于 1.25 s 爬升段到不了 1.8 m）。
+遗留 M2 项：顶格跳的广告牌在按下时不可见（≈10% 盲税），建议 M2 画远处剪影。
+</div>
+
+<div class="callout">
+<div class="t">v2.3 交付记录（2026-10-18 夜 · M2 像素风完整版 + 发布上线 + 云埋点）</div>
+M2 已交付并上线：<b>赛车特技小游戏_M2_像素风_2026-10-18.html</b>（446.8KB 单文件，逻辑层与 M1 逐字一致，回归 46/46）——接入用户 7 张像素素材（车 ×2 / 封面 / 横幅 / 场景 / 结算 / 跳跃），车精灵 40 色量化 + 棋盘格背景抠透明 + 水印移除，封面烤入「开始游戏」按钮；分享链接 <b>https://stunt-racer.app.workbuddy.host/</b>（竖屏提示横屏，页面只含游戏本体）。
+排查修复 4 项（详见 §13）：① 空格焦点 bug——点开始后按钮留焦点，空格触发按钮默认行为 = 重开而非起跳（桌面必踩）；② 警示窗截断——对向车速 60–150 km/h 随机 ⇒ 闭合 33–58 m/s，固定 55m 出场阈值使最快车仅提前 0.94 s 入场，违背锁定 warnLead=2.0（修为 max(55, 2s×闭合+8)，10 种子断言偏差 ≤8.3 ms）；③ 横幅按用户反馈从底部上移至「广告牌上沿 ↔ 得分下沿」带；④ 全网开局计数双屏缺失——CDN 在用户网络不可达导致降级「—」，SDK 改为内联（零外部依赖），坠毁屏补数据行。
+新增云埋点（§9 合同）：<b>全网开局次数</b>——insert-only 事件表 game_starts，每局开局插一行，COUNT(*) 即总数；RLS 公开 SELECT + INSERT、无 UPDATE/DELETE ⇒ 只能加行不能改数（防刷分篡改、无并发竞态）；换设备 / 清缓存不丢；SDK 失败显示「—」不阻塞游戏。线上实测双屏均显示真实计数（当前 102 次）。
+</div>
+
+<h2>一、与 v1 的三处硬分歧</h2>
+<p>v2 不是 v1 的增量，是转向。三处硬分歧意味着渲染、判定、会话全部重做，M0 原型（斜视角）不可直接复用；v1 的「落地前 0.3 s 稳定系统自动回正」补丁正式作废。</p>
+<table>
+<tr><th style="width:90px">维度</th><th>v1（2026-10-16）</th><th>v2（本版）</th><th style="width:200px">后果</th></tr>
+<tr><td>视角</td><td>斜 45° 伪透视</td><td>纯侧视横版卷轴</td><td>高度读数、碰撞几何、全部重做</td></tr>
+<tr><td>评分</td><td>滞空距离 + 起跳时机（五星制）</td><td>跳跃高度 + 翻滚圈数（0–10 分）</td><td>v1 把螺旋翻滚切割为纯视觉；v2 重新耦合</td></tr>
+<tr><td>结构</td><td>单局一车、可续</td><td>连躲 5 辆通关；坠毁 = 0 分、从第 1 辆重来</td><td>会话结构重定（§7）</td></tr>
+<tr><td>保留</td><td colspan="2">网页平台、街机手感、像素车素材方向（今日两张 PNG 直接复用）</td><td>—</td></tr>
+</table>
+
+<h2>二、参数总表（定稿 · v2.2）</h2>
+<table>
+<tr><th style="width:150px">参数</th><th>值</th><th style="width:250px">状态 / 来源</th></tr>
+<tr><td>爬升模型</td><td class="num">松手高度 = 1.44 · t（米），线性；帽 6.5 m（车底）</td><td>✓ 定稿</td></tr>
+<tr><td>旋转启动</td><td class="num">t = 1.40 s（只 gate 旋转，不 gate 爬升）</td><td>✓ 定稿（v2.1 D 补丁，原 1.25）</td></tr>
+<tr><td>角速度 ω</td><td class="num">360°/s 恒定；松手即停</td><td>✓ 定稿（参照滑雪大冒险，已多源查证）</td></tr>
+<tr><td>落地判定</td><td class="num">修正后朝向 ∈ 整圈 ±30°</td><td>✓ 定稿（= 167 ms 松手窗口）</td></tr>
+<tr><td>修正</td><td class="num">30°/tap，只回退禁前补，不限次，爬升 / 降落段均可</td><td>✓ 定稿（语义终版见 §4）</td></tr>
+<tr><td>重力 g</td><td class="num">20</td><td>✓ 定稿</td></tr>
+<tr><td>按住上限</td><td class="num">4.51 s（松手车底 6.5 m）</td><td>✓ 派生</td></tr>
+<tr><td>圈数上限</td><td class="num">3.11 圈（L = t − 1.40）</td><td>✓ 派生（v2.1，原 3.26）</td></tr>
+<tr><td>再起跳前置</td><td class="num">落地后需爬升 1.25 s 才能越过 1.8 m 车顶</td><td>✓ 派生（= 1.8 / 1.44）</td></tr>
+<tr><td>广告牌</td><td class="num">下沿 8 m（车顶判定）至屏顶；按下前可见；相撞坠毁</td><td>✓ 定稿</td></tr>
+<tr><td>警示</td><td class="num">提前 2 s 弹出</td><td>✓ 定稿</td></tr>
+<tr><td>间距</td><td class="num">按车次递减的时间间距 t_g（§6）；距离为派生量</td><td>✓ 定稿</td></tr>
+<tr><td>下一辆信息</td><td class="num">不可读</td><td>✓ 定稿（加难度）</td></tr>
+<tr><td>起跳约束</td><td class="num">必须落地才能再跳；空中只能调姿态</td><td>✓ 定稿</td></tr>
+<tr><td>通关 / 坠毁</td><td class="num">连躲 5 辆；crash = 0 分，无安慰分</td><td>✓ 定稿（v2.2：原 10 辆）</td></tr>
+<tr><td>车高</td><td class="num">玩家车 1.5 m ／ 对向车 1.8 m</td><td>✓ 已确认（原 P0 存疑销项）</td></tr>
+<tr><td>玩家车速</td><td class="num">60 km/h（16.67 m/s）</td><td>暂定（用户确认口径）</td></tr>
+<tr><td>对向车速</td><td class="num">60–150 km/h 均匀随机；闭合速度 33.3–58.3 m/s</td><td><span class="pending">未确认</span>（继承 v1，只影响距离换算）</td></tr>
+</table>
+
+<h2>三、垂直运动与跳跃</h2>
+<p><b>模型一句话：</b>按住即线性爬升 1.44 m/s；按住超过 <b>1.40 s</b> 开始旋转（360°/s 恒定）；松手停转、角度冻结，按当前速度自由落体（g = 20）。1.25–1.40 s 之间「爬升但不转」——这段窗口是无旋转跳的生存空间，也是 v2.1 补丁的全部意义。</p>
+
+<figure>
+<svg viewBox="0 0 680 430" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system,PingFang SC,Microsoft YaHei,sans-serif">
+  <!-- billboard zone -->
+  <rect x="56" y="40" width="604" height="29" fill="#fbe4dc" opacity="0.55"/>
+  <line x1="56" y1="69" x2="660" y2="69" stroke="#a32d2d" stroke-width="1.2" stroke-dasharray="6 4"/>
+  <text x="62" y="60" font-size="11.5" fill="#a32d2d">广告牌下沿 8 m（车顶判定）＝ 车底帽 6.5 m</text>
+  <!-- annotations -->
+  <text x="70" y="86" font-size="11.5" fill="#4a4a4a">爬升 1.44 m/s（线性）</text>
+  <text x="70" y="102" font-size="11.5" fill="#7a7a7a">共用同一条爬升线</text>
+  <!-- oncoming car envelope -->
+  <rect x="56" y="288.1" width="604" height="83.9" fill="#f2efe8"/>
+  <line x1="56" y1="288.1" x2="660" y2="288.1" stroke="#c9c5bb" stroke-width="1"/>
+  <text x="654" y="350" font-size="11.5" fill="#7a7a7a" text-anchor="end">对向车包络（高 1.8 m）</text>
+  <!-- ground -->
+  <line x1="56" y1="372" x2="660" y2="372" stroke="#1a1a1a" stroke-width="1.5"/>
+  <text x="60" y="390" font-size="11.5" fill="#7a7a7a">地面</text>
+  <!-- rotation start -->
+  <line x1="209" y1="104" x2="209" y2="372" stroke="#a8630b" stroke-width="1" stroke-dasharray="4 4"/>
+  <text x="215" y="100" font-size="11.5" fill="#a8630b">1.40 s 起转</text>
+  <!-- climb line -->
+  <line x1="64" y1="372" x2="531.2" y2="69" stroke="#1a1a1a" stroke-width="2"/>
+  <!-- trajectories -->
+  <polyline points="209,278.1 216.5,275.6 229.7,283.3 240.1,299.9 250.4,325.8 263.6,372" fill="none" stroke="#3b6d11" stroke-width="1.8"/>
+  <polyline points="312.6,211.0 320.1,208.5 333.3,216.2 343.7,232.8 354.0,258.7 364.4,293.9 374.7,338.4 381.6,372" fill="none" stroke="#3b6d11" stroke-width="1.8"/>
+  <polyline points="416.2,143.8 423.7,141.4 436.9,149.1 447.3,165.7 457.6,191.6 468.0,226.8 478.3,271.3 488.7,325.2 496.5,372" fill="none" stroke="#a8630b" stroke-width="1.8"/>
+  <polyline points="519.8,76.7 527.3,74.3 540.5,82.0 550.9,98.6 561.2,124.5 571.6,159.7 581.9,204.2 592.3,258.1 602.6,321.3 610.0,372" fill="none" stroke="#b4472e" stroke-width="1.8"/>
+  <polyline points="531.2,69.1 538.7,66.7 551.9,74.3 562.3,90.9 572.6,116.8 583.0,152.0 593.3,196.6 603.7,250.5 614.0,313.7 622.5,372" fill="none" stroke="#a32d2d" stroke-width="1.8"/>
+  <!-- release dots + labels -->
+  <circle cx="209" cy="278.1" r="3.5" fill="#3b6d11"/><text x="204" y="266" font-size="11.5" fill="#3b6d11" text-anchor="end">小跳 2.02 m · 余 0.3 m</text>
+  <circle cx="312.6" cy="211.0" r="3.5" fill="#3b6d11"/><text x="320" y="202" font-size="11.5" fill="#3b6d11">1 圈 3.46 m</text>
+  <circle cx="416.2" cy="143.8" r="3.5" fill="#a8630b"/><text x="424" y="135" font-size="11.5" fill="#a8630b">2 圈 4.90 m</text>
+  <circle cx="519.8" cy="76.7" r="3.5" fill="#b4472e"/><text x="512" y="68" font-size="11.5" fill="#b4472e" text-anchor="end">3 圈 6.34 m</text>
+  <circle cx="531.2" cy="69.1" r="3.5" fill="#a32d2d"/><text x="545" y="62" font-size="11.5" fill="#a32d2d">顶格 6.50 m</text>
+  <!-- air time labels -->
+  <text x="264" y="402" font-size="11" fill="#7a7a7a" text-anchor="middle">滞空 1.93 s</text>
+  <text x="382" y="402" font-size="11" fill="#7a7a7a" text-anchor="middle">3.07 s</text>
+  <text x="497" y="402" font-size="11" fill="#7a7a7a" text-anchor="middle">4.18 s</text>
+  <text x="600" y="402" font-size="11" fill="#7a7a7a" text-anchor="middle">5.27 s</text>
+  <text x="652" y="402" font-size="11" fill="#7a7a7a" text-anchor="end">5.39 s</text>
+  <!-- axes -->
+  <text x="360" y="424" font-size="12" fill="#4a4a4a" text-anchor="middle">按住时长 t（秒）</text>
+  <text x="30" y="210" font-size="12" fill="#4a4a4a" text-anchor="middle" transform="rotate(-90 30 210)">车底高度（米）</text>
+  <g font-size="10.5" fill="#7a7a7a">
+    <line x1="167.6" y1="372" x2="167.6" y2="377" stroke="#7a7a7a"/><text x="167.6" y="388" text-anchor="middle">1</text>
+    <line x1="271.2" y1="372" x2="271.2" y2="377" stroke="#7a7a7a"/><text x="271.2" y="388" text-anchor="middle">2</text>
+    <line x1="374.8" y1="372" x2="374.8" y2="377" stroke="#7a7a7a"/><text x="374.8" y="388" text-anchor="middle">3</text>
+    <line x1="478.4" y1="372" x2="478.4" y2="377" stroke="#7a7a7a"/><text x="478.4" y="388" text-anchor="middle">4</text>
+    <line x1="582" y1="372" x2="582" y2="377" stroke="#7a7a7a"/><text x="582" y="388" text-anchor="middle">5</text>
+  </g>
+</svg>
+<figcaption>图 1 · 五种跳法的轨迹（车底高度 vs 按住时长，v2.1）。所有跳法共用同一条爬升线，分叉只在松手点；1.40 s 前松手 = 干净小跳（顶点余量仅 0.3 m）；顶格松手窗口 167 ms，且顶点擦过牌线（余速 +5 cm，见存疑 #7）。</figcaption>
+</figure>
+
+<table>
+<tr><th>跳法</th><th>按住</th><th>松手高度</th><th>顶点余量</th><th>圈数</th><th>滞空</th><th>单跳得分</th></tr>
+<tr><td>纯小跳</td><td class="num">1.40 s</td><td class="num">2.02 m</td><td class="num">+0.3 m</td><td class="num">0</td><td class="num">1.93 s</td><td class="num">1.6</td></tr>
+<tr><td>1 圈</td><td class="num">2.40 s</td><td class="num">3.46 m</td><td class="num">+1.7 m</td><td class="num">1.00</td><td class="num">3.07 s</td><td class="num">4.3</td></tr>
+<tr><td>1.5 圈<span class="warn"> · 陷阱</span></td><td class="num">2.90 s</td><td class="num">4.18 m</td><td class="num">+2.4 m</td><td class="num">1.50</td><td class="num">3.62 s</td><td class="num">5.6</td></tr>
+<tr><td>2 圈</td><td class="num">3.40 s</td><td class="num">4.90 m</td><td class="num">+3.1 m</td><td class="num">2.00</td><td class="num">4.18 s</td><td class="num">7.0</td></tr>
+<tr><td>2.5 圈<span class="warn"> · 陷阱</span></td><td class="num">3.90 s</td><td class="num">5.62 m</td><td class="num">+3.9 m</td><td class="num">2.50</td><td class="num">4.72 s</td><td class="num">8.3</td></tr>
+<tr><td>3 圈</td><td class="num">4.40 s</td><td class="num">6.34 m</td><td class="num">+4.6 m</td><td class="num">3.00</td><td class="num">5.27 s</td><td class="num">9.7</td></tr>
+<tr><td>顶格<span class="warn"> · 10.0 不可达</span></td><td class="num">4.51 s</td><td class="num">6.50 m</td><td class="num">+4.8 m</td><td class="num">3.11</td><td class="num">5.39 s</td><td class="num">10.0 → ≈9.85</td></tr>
+</table>
+<p style="font-size:13px;color:var(--ink3)">顶点余量 = 真实顶点（松手高度 + 松手余速 0.05 m）− 1.8 m 车顶。小跳的松手窗 = <b>[1.25, 1.40] s</b>（低于 1.25 s 爬升段根本到不了 1.8 m；v2.2 勘误，原记 [1.21, 1.40]）；其余跳法的 167 ms 窗 = 整数圈 ±30°。<b>半圈档（1.5 / 2.5 圈）是陷阱不是技法</b>——松手角 180° 倒栽葱，需 6 taps（≈0.65 s 内 9 次/s）人类不可达（bot 实测：按住 2.9 s 每辆，第 1 辆即摔）；可达的无轻触锚点只有整圈档 1.40 / 2.40 / 3.40 / 4.40 s。<b>顶格 10.0 分不可达</b>——帽点自动松手 θ=41° 超 ±30° 窗，不轻触必摔、轻触 1 次 = 9.85（bot 实测）；干净上限 = 4.40 s 三圈 <b>9.69</b>，窗后缘 4.483 s 刀锋 9.78–9.92。公式值 10 需要 apex ≥ 6.5 与 L ≥ 3.11 同时成立，而 apex 6.5 只出现在帽点 ⇒ 数学上不可达。</p>
+
+<p><b>小跳的生死账（v2.1 重算）：</b>对向车 1.8 m ⇒ 车底必须越过 1.8 m。无旋转跳的松手窗 = [1.21, 1.40] s（顶点 ≥ 1.8 m 且不错过旋转阈值），宽 0.19 s；顶点余量 0–0.3 m；且车的到达还必须落进按下窗（领先警示 0.36–0.75 s 按下，窗宽 0.39 s）。<b>小跳从「恒安全保底技」降级为双手序专家技</b>——基本技现在是 1 圈跳：松手窗同样 167 ms，但按下窗宽 1.6 s，滞空 3.07 s 还让轻触预算翻倍。教学车 1 因此改教 1 圈跳。</p>
+
+<p>三个读图要点：① <b>爬升只有一条线</b>——所有跳法共用，按多久两者（高度 / 圈数）必同涨；② <b>1 圈是基本技</b>——3.51 m 顶点过 1.8 m 车余 1.7 m、过窗 1.6 s，怎么按都活；小跳合法但紧张；③ <b>帽即绞索</b>——顶格松手窗口只有 167 ms，公式不罚贪心，赛道罚（§6）。</p>
+
+<h2>四、修正系统（语义终版）</h2>
+<p><b>为什么需要它：</b>±30° 落地窗在 360°/s 下只有 167 ms，低于人类预期计时精度（SD 约 50–100 ms）；修正把有效容差扩展到约 ±60°（小跳）至 ±90–120°（顶格）——顶点越高、下落段越长（0.46 → 0.81 s）、轻触预算越多，高度与容错耦合，这是白送的好属性。</p>
+
+<figure>
+<svg viewBox="0 0 680 310" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system,PingFang SC,Microsoft YaHei,sans-serif">
+  <!-- window sector -->
+  <path d="M 104 75.3 A 92 92 0 0 1 196 75.3 L 150 155 Z" fill="#e6efd8" stroke="#3b6d11" stroke-width="1"/>
+  <circle cx="150" cy="155" r="92" fill="none" stroke="#c9c5bb" stroke-width="1.5"/>
+  <circle cx="150" cy="155" r="60" fill="none" stroke="#e0ddd5" stroke-width="1"/>
+  <!-- ticks -->
+  <g stroke="#7a7a7a" stroke-width="1">
+    <line x1="150" y1="63" x2="150" y2="70"/><line x1="196" y1="75.3" x2="190.6" y2="80.3"/>
+    <line x1="223" y1="109" x2="217.4" y2="112.1"/><line x1="223" y1="201" x2="217.4" y2="197.9"/>
+    <line x1="196" y1="234.7" x2="190.6" y2="229.7"/><line x1="150" y1="247" x2="150" y2="240"/>
+    <line x1="104" y1="234.7" x2="109.4" y2="229.7"/><line x1="77" y1="201" x2="82.6" y2="197.9"/>
+    <line x1="77" y1="109" x2="82.6" y2="112.1"/><line x1="104" y1="75.3" x2="109.4" y2="80.3"/>
+  </g>
+  <text x="150" y="46" font-size="11.5" fill="#3b6d11" text-anchor="middle">0° ＝ 水平（落地安全窗 ±30°）</text>
+  <text x="252" y="159" font-size="11" fill="#7a7a7a">90°</text>
+  <text x="146" y="264" font-size="11" fill="#7a7a7a" text-anchor="middle">180°</text>
+  <text x="42" y="159" font-size="11" fill="#7a7a7a">270°</text>
+  <!-- release pointer 144 -->
+  <line x1="150" y1="155" x2="204.1" y2="229.4" stroke="#b4472e" stroke-width="2"/>
+  <circle cx="204.1" cy="229.4" r="4" fill="#b4472e"/>
+  <text x="214" y="242" font-size="11.5" fill="#b4472e">松手 144°（0.40 圈）</text>
+  <!-- tap arc -->
+  <path d="M 190 210 A 68 68 0 0 0 177.7 92.9" fill="none" stroke="#b4472e" stroke-width="1.5"/>
+  <polygon points="177.7,92.9 188.4,93.3 185.2,100.7" fill="#b4472e"/>
+  <g fill="#b4472e"><circle cx="212.1" cy="127.3" r="3"/><circle cx="217.6" cy="147.9" r="3"/><circle cx="205" cy="115" r="3"/></g>
+  <text x="228" y="182" font-size="11.5" fill="#b4472e">4 次轻触 × −30°</text>
+  <!-- final pointer 24 -->
+  <line x1="150" y1="155" x2="187.4" y2="70.9" stroke="#3b6d11" stroke-width="2"/>
+  <circle cx="187.4" cy="70.9" r="4" fill="#3b6d11"/>
+  <text x="196" y="66" font-size="11.5" fill="#3b6d11">落地 24°（0.07 圈）</text>
+  <!-- rules -->
+  <text x="300" y="48" font-size="13.5" font-weight="600" fill="#1a1a1a">修正语义（终版，实现照此写）</text>
+  <g font-size="12.5" fill="#4a4a4a">
+    <text x="300" y="80">① 圈数信用在松手瞬间冻结</text>
+    <text x="300" y="104">② 轻触只改朝向：30°/tap，朝最近整圈</text>
+    <text x="300" y="128">③ 计分 = min(松手角, 修正后角) ÷ 360</text>
+    <text x="300" y="152">向后修按 tap 扣信用；向前补整不增信用（禁前补）</text>
+    <text x="300" y="180">例：松手 324°（差 36° 没翻完）→ 1 tap 向前 → 354°，</text>
+    <text x="300" y="204">落窗内，信用仍 0.90——修正永不刷分</text>
+    <text x="300" y="228">能力账：轻触预算 ＝ 松手后的下落段 0.46–0.81 s</text>
+    <text x="300" y="250">≤60° 1–2 taps 稳救；90° 需 3 taps（要高顶点）</text>
+    <text x="300" y="272">120° 需 4 taps（顶格＋快手）；倒栽葱 180° 需 6 taps ≈ 致命</text>
+    <text x="300" y="292">更正：早前记「10–11 taps」按纯向后算出错，结论不变</text>
+  </g>
+</svg>
+<figcaption>图 2 · 修正机制。松手 144° 经 4 次轻触回到窗内，信用从 0.40 掉到 0.07——修多少，掉多少。</figcaption>
+</figure>
+
+<div class="callout">
+<div class="t">爬升段修正的真实 niche 与实现注记（v2.1 补充）</div>
+平时敲平只减圈数、不理性。它唯一该用的时刻：帽（广告牌或节奏限制）比干净整圈先到、朝向还歪着——敲一下保命。<br><br>
+<b>实现注记：</b>爬升段轻触必须实现为「冻结旋转 + 步进 30°」——否则 360°/s 的旋转会实时覆盖轻触，爬升段修正等于空操作。冻结语义的已知副作用：按住后期敲一下 = 放弃剩余圈数；全程爬升段敲平 = 0 圈满高度 = <b>封顶 5.0 分的保守打法</b>（不 dominant，但是有效逃生口；若实测太强，给爬升段轻触加价：每次 −1 圈）。前补在爬升段不构成刷分——同样时长下，多按 0.1 s 既补圈又加高，严格优于敲一下。
+</div>
+
+<h2>五、评分公式</h2>
+<div class="formula">
+白话版：得分 ≈ 按住秒数 × 2.7 − 2.25（≥1.40 s 起算，封顶 ≈ 9.9——10.0 不可达，见 §3 锚点注）<br><br>
+官方版：s_i = 10 × [ 0.5 · apex_i / 6.5 + 0.5 · L_i / 3.11 ]，封顶 10<br>
+　· apex_i ＝ 松手高度（1.44·t），不受修正影响<br>
+　· L_i ＝ min(松手角, 修正后角) ÷ 360，连续值；松手瞬间冻结<br>
+　· 通关分 ＝ 全部起跳的均值（≤5 次）；坠毁 ＝ 0，不设安慰分
+</div>
+<p><b>为什么权重不改变「按多久」的决策：</b>高度与圈数同为按住时长的函数（每秒 +1.44 m = 高度轴 22%，+1 圈 = 圈数轴 32%），按多久两者必同涨——权重真正定价的只有两样：纯小跳值多少（1.6 分，白窜的 2.0 m 也值钱），以及修正亏损有多疼。</p>
+<p><b>修正扣分示例：</b>2 圈跳（7.0）修掉 0.3 圈 → 按 1.7 圈算 → 6.5。修正只扣圈数那 5 分，不碰高度那 5 分——扣分必须看得见，所以结算屏圈数显示两位小数。</p>
+<p><b>三个锚点记住就够：</b>按 3 秒 ≈ 5.9 分；按 4 秒 ≈ 8.6 分；按满 ≈ 9.9 分（帽点必须轻触救；干净上限是 4.40 s 三圈的 9.69——需要 167 ms 松手精度连中 3–5 次，加同样次数的盲飞赌命——满分级就该近不可能）。</p>
+
+<h2>六、难度曲线</h2>
+<p><b>关键发现：</b>警示按时间触发（提前 2 s）、碰撞按时间判定——<b>车速随机在当前机制下对难度近乎装饰</b>，只提供视觉冲击与距离换算。唯一的难度旋钮是<b>间距时间 t_g</b>。机制约束：落地后车底重新爬过 1.8 m 车顶需要 1.25 s，所以每一跳的真实成本是「滞空 + 1.25 s」对下一辆的压迫。</p>
+
+<figure>
+<svg viewBox="0 0 680 215" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system,PingFang SC,Microsoft YaHei,sans-serif">
+  <line x1="56" y1="176" x2="660" y2="176" stroke="#1a1a1a" stroke-width="1.5"/>
+  <g stroke="#e0ddd5" stroke-width="1">
+    <line x1="56" y1="36" x2="660" y2="36"/><line x1="56" y1="56" x2="660" y2="56"/>
+    <line x1="56" y1="76" x2="660" y2="76"/><line x1="56" y1="96" x2="660" y2="96"/>
+    <line x1="56" y1="116" x2="660" y2="116"/><line x1="56" y1="136" x2="660" y2="136"/>
+    <line x1="56" y1="156" x2="660" y2="156"/>
+  </g>
+  <g font-size="10" fill="#7a7a7a" text-anchor="end">
+    <text x="46" y="39">7</text><text x="46" y="59">6</text><text x="46" y="79">5</text><text x="46" y="99">4</text>
+    <text x="46" y="119">3</text><text x="46" y="139">2</text><text x="46" y="159">1</text><text x="46" y="179">0</text>
+  </g>
+  <!-- bars（v2.2 勘误：改按间隙绘制；原「车 1 = 6–7 s」是死代码，首遇实际固定 4 s） -->
+  <line x1="56" y1="96" x2="660" y2="96" stroke="#7a7a7a" stroke-width="1" stroke-dasharray="2 3"/>
+  <text x="60" y="92" font-size="10.5" fill="#7a7a7a">首遇 4 s（教学局 · 固定）</text>
+  <rect x="68" y="56" width="36" height="30" fill="#a8630b" opacity="0.85" rx="2"/>
+  <rect x="198" y="56" width="36" height="30" fill="#a8630b" opacity="0.85" rx="2"/>
+  <rect x="328" y="76" width="36" height="30" fill="#b4472e" opacity="0.85" rx="2"/>
+  <rect x="458" y="106" width="36" height="18" fill="#a32d2d" opacity="0.85" rx="2"/>
+  <g font-size="11" fill="#ffffff" text-anchor="middle" font-weight="600">
+    <text x="86" y="75">4.5–6</text><text x="216" y="75">4.5–6</text>
+    <text x="346" y="95">3.5–5</text>
+    <text x="476" y="119">2.6–3.5</text>
+  </g>
+  <!-- reference lines: rhythm-A lower bounds (air - 0.75s) -->
+  <line x1="56" y1="130" x2="660" y2="130" stroke="#3b6d11" stroke-width="1" stroke-dasharray="5 4"/>
+  <text x="656" y="126" font-size="11" fill="#3b6d11" text-anchor="end">1圈 2.3s</text>
+  <line x1="56" y1="107" x2="660" y2="107" stroke="#a8630b" stroke-width="1" stroke-dasharray="5 4"/>
+  <text x="656" y="103" font-size="11" fill="#a8630b" text-anchor="end">2圈 3.4s</text>
+  <line x1="56" y1="86" x2="660" y2="86" stroke="#b4472e" stroke-width="1" stroke-dasharray="5 4"/>
+  <text x="656" y="82" font-size="11" fill="#b4472e" text-anchor="end">3圈 4.5s</text>
+  <!-- endgame note -->
+  <text x="64" y="162" font-size="11" fill="#4a4a4a">终局间隙 2.6–3.5 s：1 圈基本线按下窗 0.29–1.19 s（用户实测可过）｜ 3 圈隔辆穿越 δ ∈ [1.25, 5.07−t_g45] ｜ 2 圈死区</text>
+  <!-- phase labels -->
+  <g font-size="12" font-weight="600" text-anchor="middle">
+    <text x="151" y="30" fill="#a8630b">基础</text>
+    <text x="346" y="30" fill="#b4472e">进阶</text>
+    <text x="476" y="30" fill="#a32d2d">终局</text>
+  </g>
+  <!-- x labels -->
+  <g font-size="11" fill="#7a7a7a" text-anchor="middle">
+    <text x="86" y="194">1→2</text><text x="216" y="194">2→3</text>
+    <text x="346" y="194">3→4</text><text x="476" y="194">4→5</text>
+  </g>
+  <text x="20" y="106" font-size="12" fill="#4a4a4a" text-anchor="middle" transform="rotate(-90 20 106)">t_g（秒）</text>
+</svg>
+<figcaption>图 3 · 难度曲线（t_g 单旋钮递减；车速全程 60–150 km/h 均匀随机，对难度近装饰）。虚线 = 各跳法「每辆都跳」的间距下限（滞空 − 0.75 s），bar 整体在虚线以上 = 可稳定每辆都跳；3 圈在终局靠「隔辆穿越」入场（见下），不在本图虚线语义内。v2.2 勘误：bar 按「间隙」绘制（1→2 / 2→3 / 3→4 / 4→5）——原「车 1 = 6–7 s」在设计实现里是死代码（首遇固定 4 s），从未生效。</figcaption>
+</figure>
+
+<table>
+<tr><th style="width:110px">间隙（车 n−1 → n）</th><th>t_g</th><th>这段学什么</th><th>间距距离（派生 d = t_g × 闭合速度）</th></tr>
+<tr><td>首遇（起点 → 车 1）</td><td class="num">4 s 头部</td><td>教学局：警示提前 2 s 响起，改教 1 圈跳（小跳是双手序专家技）</td><td class="num">133–233 m</td></tr>
+<tr><td>车 1→2 / 2→3</td><td class="num">4.5–6 s</td><td>1 圈保底；2 圈登场；3 圈刀尖（需 t_g ≥ 4.5）</td><td class="num">150–350 m</td></tr>
+<tr><td>车 3→4</td><td class="num">3.5–5 s</td><td>2 圈刀尖（需 t_g ≥ 3.4）；3 圈退场（节奏 A 下限 4.52）</td><td class="num">117–292 m</td></tr>
+<tr><td>车 4→5</td><td class="num">2.6–3.5 s</td><td>终局过渡：≤1 圈稳 / 3 圈隔辆穿越 glory；2 圈结构性死区（见下）</td><td class="num">87–204 m</td></tr>
+</table>
+
+<p><b>v2.2 · 5 辆版映射：</b>四段 t_g 边界一字不动，只按间隙重映射——首遇固定 4 s（教学）、1→2 / 2→3 = 4.5–6 s（基础）、3→4 = 3.5–5 s（进阶）、4→5 = 2.6–3.5 s（终局过渡）。用户实测确认 4→5 可过（1 圈基本线按下窗 0.29–1.19 s），<b>维持不改</b>。备选映射（4–5 都放终局带）会整段丢掉进阶段，不采用。单局时长见 §7。
+
+<h3>终局节奏模型（v2.1 显式化；v2.2 勘误重写为 5 辆版过渡窗）</h3>
+<p>把「按下时机」还原成时间轴上的硬约束，任意相邻两车之间只有两种合法节奏：</p>
+<ul>
+<li><b>节奏 A · 每辆都跳</b>：落地 → 立刻按 → 1.25 s 后车底越过 1.8 m 车顶 → 松手 → 落地，循环。可行条件 <code>t_g ≥ 滞空 − 0.75 s</code>（0.75 = 警示提前 2 s − 爬过车顶 1.25 s；理论下限，实战留 +0.3 s 余量）。</li>
+<li><b>节奏 B · 隔辆穿越</b>：一跳盖两辆——第二辆从腋下穿过时你还在 1.8 m 以上，落地后再跳第三辆。可行条件 <code>(滞空 + 1.25 − δ) / 2 ≤ t_g ≤ 下落窗前沿 − δ</code>（δ = 按下时距警示响起的秒数，0–2）。</li>
+</ul>
+<p>两种节奏对按下时机的要求相反：A 要<b>早按</b>（警示一响就按），B 要<b>晚按</b>（警示后约 0.5 s）——同一个输入意义相反，这是十一轮机制攒出来的深度；盲间距（下一辆不可读）把它变成读局。</p>
+
+<p><b>5 辆版的终局 = 第 4→5 辆过渡（v2.2 勘误）：</b>10 辆版的终局是「车 8–10 三段连跳」，技法体现在链条内部；5 辆版只剩一段终局间隙，约束换了位置——<b>车 5 是末车、身后无车，任何能清掉它的跳法都合法</b>，真正的终局考题是<b>车 4 落地到车 5 按下之间的窗口</b>：</p>
+<p class="formula">车 5 按下窗 = t_g45 − 1.25 −（滞空4 − δ4）　（δ4 = 车 4 松手提前量，0–2 s）</p>
+<table>
+<tr><th>车 4 跳法</th><th>滞空</th><th>落地（δ4=2 时）</th><th>车 5 按下窗（t_g45 = 2.6–3.5 s）</th><th>判定（bot 实测 · 20 种子/线）</th></tr>
+<tr><td>小跳</td><td class="num">1.93 s</td><td class="num">T4 + 0.47</td><td class="num">0.88–1.78 s</td><td>恒可行；车 5 可拉满（C 线 20/20，均分 1.50）</td></tr>
+<tr><td>1 圈</td><td class="num">3.07 s</td><td class="num">T4 + 1.06</td><td class="num">0.29–1.19 s</td><td><b>基本线：全带可跳</b>（用户实测可过；A 线 20/20，均分 5.39）</td></tr>
+<tr><td>1.5 圈</td><td class="num">3.62 s</td><td class="num">T4 + 1.62</td><td class="num">−0.27–0.63 s</td><td>紧；且松手即倒栽葱（半圈陷阱档，见 §3）</td></tr>
+<tr><td>2 圈</td><td class="num">4.18 s</td><td class="num">T4 + 2.18</td><td class="num">−0.83–0.07 s</td><td><b>结构性死区</b>（E1 bot 0/20，全部死于第 5 辆）</td></tr>
+<tr><td>3 圈</td><td class="num">5.27 s</td><td class="num">不落地</td><td class="num">δ4 ∈ [1.25, 5.07−t_g45]（0.32–1.22 s）</td><td><b>glory path</b>：隔辆穿越，4 跳通关（B 线 20/20，均分 5.67）</td></tr>
+</table>
+<p>两条合法终局线因此清晰：<b>稳健线</b>——车 4 打 1 圈，车 5 拉满（4.40 s 干净三圈 9.69，或 4.483 s 窗后缘刀锋 9.78–9.92），五跳均分上限 ≈ 5.4；<b>glory 线</b>——车 4 警示后晚按 0.4–0.75 s 打 3 圈，车 5 从腋下穿过，四跳均分 ≈ 5.7。全程 1 圈保底 4.26、全程小跳 1.50。三条线全部有 20/20 的 bot 实测，阶梯完整。</p>
+<p><b>已知瑕疵 · 2 圈结构性死区（记账 P1）：</b>4→5 间隙（2.6–3.5 s）整体落在 2 圈的两种节奏窗口之外（A 需 ≥3.43，B 需 ≤2.8）——7.0 分在终局不可达，且 1.5 圈还是倒栽葱陷阱 ⇒ 车 4 的可选档实际是 {小跳, 1 圈, 3 圈} 三档。同时最紧的间距反而利好最贪的 3 圈（B 窗在下沿最宽），与「终局罚贪心」的曲线意图相反。两条路：(a) 接受——3 圈的双紧窗口就是终局的 glory path，9.7 分就该这么挣（当前倾向）；(b) 终局间隙上移到 3.8–4.5 s（2 圈 A 复活，但 3 圈退出终局，空洞挪到顶端）。真机试玩后裁决。</p>
+<p><b>评分口径澄清（v2.1）：</b>「通关分 = 十跳均值」在隔辆穿越下没有十跳——口径改为<b>全部起跳的均值</b>（跳数 ≤ 5，隔辆穿越时 3–4 次）。单跳公式不变；效果是隔辆穿越 = 更少、更大跳的均值，样本更少、方差更大——一条明面上的高风险高回报路线。</p>
+<p>间距距离是派生量：首间隙就会到 150–350 m，超出 v1 原定的 200 m 上限——建议接受（初段本就该宽松）；原 80 m 下限永远不会触到（t_g ≥ 2.6 ⇒ d ≥ 87 m），是死代码，正好。</p>
+
+<h2>七、会话结构</h2>
+<ul>
+<li>三种死法同一待遇：撞对向车、落地超 ±30°、顶到广告牌——全是坠毁 = 当局结束，<b>0 分，无安慰分</b>；</li>
+<li>重开从第 1 辆起，「连躲 5 辆」字面执行——中途死就是这辈子重来；</li>
+<li>单跳可覆盖两辆对向车（隔辆穿越，§6），起跳次数 ≤ 5；坠毁屏的「躲过 n/5」按车计，不按跳计；</li>
+<li>单局约 5–31 秒（不跳撞第 1 辆 ≈ 5 s；通关局 ≈ 22–31 s，bot 实测），比 10 辆版（15–55 s）缩短约一半，标准街机局；</li>
+<li>localStorage 只继承最高分，其余不继承；</li>
+<li>坠毁画面显示「躲过 n / 5」+ 历史最高分 + 重开按钮——进度给足，分数不给。</li>
+</ul>
+
+<h2>八、操作模型</h2>
+<table>
+<tr><th style="width:110px">场景</th><th style="width:150px">输入</th><th>行为</th></tr>
+<tr><td>地面</td><td>按下</td><td>立即起跳，无地面蓄力</td></tr>
+<tr><td>空中按住</td><td>持续</td><td>爬升；过 1.40 s 起转，360°/s</td></tr>
+<tr><td>空中松手</td><td>—</td><td>停转，角度冻结，开始下落</td></tr>
+<tr><td>空中点按</td><td>每次按下记一次</td><td>修正 30°（只回退、禁前补）；与时长无关，连点才多步</td></tr>
+</table>
+<ul>
+<li>触屏整屏即按钮（支持短按 / 长按）；桌面支持鼠标按下 / 松开 + 空格；</li>
+<li>1.40 s 阈值<b>不给 UI 进度条</b>——车开始转就是反馈；前两辆配非致命文字教学（教 1 圈跳 + 空中轻触捋平：小跳是双手序专家技，不作教学起点；<b>轻触是基本技组成部分</b>——bot 实测松手噪声 ±160 ms 时不轻触 0/40、带轻触 40/40，干净松手只是专家线）；</li>
+<li>实现备注：顶格松手窗口 167 ms，移动端延迟每多吃 50 ms 窗口就窄 30%——必须用 pointer events + <code>touch-action: none</code>，禁用有 300 ms 延迟的老 touch 事件。</li>
+</ul>
+
+<h2>九、结算屏数据合同（对接你已自建的画面）</h2>
+<ul>
+<li>每跳记录三个数：最高窜高 apex、修正后圈数（连续值）、单跳得分；</li>
+<li>通关屏：全部起跳明细（每跳三项——隔辆穿越时同一跳盖两辆车）+ 均值 = 通关分；</li>
+<li>坠毁屏：躲过 n/5 + 历史最高分 + 重开按钮；</li>
+<li><b>全网开局次数（v2.3 云埋点）</b>：两个屏（通关 / 坠毁）都带此行——全局计数不分用户，埋点 = 每次「开始游戏」（点开始 / 再来一局 / R 重开各 +1）；insert-only 事件表持久化，换设备不丢；网络失败显示「—」不阻塞游戏（设计详见 §13）；</li>
+<li>显示精度：分数一位小数、圈数两位——修正扣分要看得见（7.0 掉到 6.5 这种差必须透明）。</li>
+</ul>
+
+<h2>十、设计决策日志（拷问档案）</h2>
+<p>关键定论与被否决项，存档防止未来重新纠结（#1–16 出自十四轮拷问，#17 为 M1 实测反馈）。</p>
+<table>
+<tr><th style="width:40px">#</th><th style="width:120px">拷问点</th><th>定论</th><th>被否决 / 更正</th></tr>
+<tr><td>1</td><td>落地窗口</td><td>±30°（167 ms）</td><td>±10° = 56 ms 抽签；±45° = 250 ms 超自设 200 ms 下限</td></tr>
+<tr><td>2</td><td>ω 模型</td><td>恒定 360°/s，松手即停</td><td>曾疑滑雪大冒险是离散翻转——多源查证确认持续按住旋转，用户记忆正确（已向其更正）</td></tr>
+<tr><td>3</td><td>修正价签</td><td>掉圈数</td><td>掉高度 / 限次 / CD（修正与得分对赌最美）</td></tr>
+<tr><td>4</td><td>圈数计分粒度</td><td>连续值 θ/360</td><td>整数 floor ⇒ 零头不计分 ⇒ 修正免费 ⇒ 退化打法复活</td></tr>
+<tr><td>5</td><td>防刷分</td><td>信用 = min(松手角, 修正后角)，禁前补</td><td>「信用 = 修正后角」⇒ 0.9 圈松手 + 向前补整 = 白赚 0.1</td></tr>
+<tr><td>6</td><td>爬升模型</td><td>线性 1.44 m/s 同速率延续</td><td>v1 的 8 m/s（圈数轴半死）/ 匀加速（多一个参数）</td></tr>
+<tr><td>7</td><td>广告牌</td><td>下沿 8 m（车底帽 6.5 m）</td><td>6 m（圈数轴 2.9，2 圈边缘）/ 10 m（低速爬升下滞空 7.9 s 失控）</td></tr>
+<tr><td>8</td><td>评分结构</td><td>0.5/0.5 权重、绝对锚点、均值聚合、crash = 0</td><td>超额锚点（小跳 0 分、通关 0 分难看）/ 最差跳聚合（罚被迫的谨慎）</td></tr>
+<tr><td>9</td><td>会话</td><td>坠毁即终局、0 分、从头重来</td><td>续关 / 保底安慰分</td></tr>
+<tr><td>10</td><td>难度旋钮</td><td>t_g 时间间距递减</td><td>固定距离 / 距离随车速变（车速对难度装饰，距离是派生量）</td></tr>
+<tr><td>11</td><td>下一辆可读性</td><td>不可读</td><td>可读 = 圈数选择变算术题</td></tr>
+<tr><td>12</td><td>修正方向</td><td>朝最近整圈</td><td>沿转向推（可加转 = 刷分工具）</td></tr>
+<tr><td>13</td><td>旋转阈值</td><td>1.25 → <b>1.40 s</b>（v2.1 D 补丁）</td><td>A 全盘接受（小跳地板 0.05 m 太紧）；B 爬升率回 1.6（丢 3 圈 tier、阶梯变陡）</td></tr>
+<tr><td>14</td><td>车高</td><td>玩家 1.5 m ／ 对向 1.8 m</td><td>对向车按棕色 MPV 素材，实车更高（原 P0 存疑销项）</td></tr>
+<tr><td>15</td><td>终局节奏</td><td>显式分「每辆都跳 / 隔辆穿越」双节奏</td><td>单节奏模型下 2 圈终局死亡、3 圈倒置——双节奏模型才看得见空洞</td></tr>
+<tr><td>16</td><td>聚合口径</td><td>全部起跳均值（≤5 次）</td><td>固定「十跳」在隔辆穿越下无定义；单跳公式不变</td></tr>
+<tr><td>17</td><td>通关长度</td><td><b>5 辆</b>（v2.2：原 10 辆）</td><td>用户试玩反馈「10 辆太长」；10 辆保留为「加长模式」备选，不动主链路</td></tr>
+<tr><td>18</td><td>交付前排查结论</td><td>机制层无需重烤；6 项文档勘误（10.0 不可达 / 半圈陷阱 / 终局旧框架 / 轻触是基本技 / 死代码档位 / 小跳窗精度）</td><td>bot 压测 `.workbuddy/m1_audit_bots.js`：稳健线 20/20（5.39）、glory 线 20/20（5.67）、小跳线 20/20（1.50）、贪心 1/20、2 圈每辆 0/20</td></tr>
+<tr><td>19</td><td>素材接入策略</td><td>用户 7 张像素素材：车图抠透明 + 40 色量化内嵌；封面全幅作标题背景 + 同坐标透明热区</td><td>DOM 标题面板（渐变遮罩遮车，被渲染排查否）；外部引用文件（CDN / 多文件部署破坏单文件分享）</td></tr>
+<tr><td>20</td><td>横幅位置</td><td>画面上方「广告牌上沿 ↔ 得分下沿」带内向上展开（v2.3）</td><td>底部中央（用户反馈遮视野）；固定 top 值（高度自适应会压广告牌）</td></tr>
+<tr><td>21</td><td>全网计数实现</td><td>insert-only 事件表 + COUNT(*)；SDK 内联（v2.3 修复 CDN 不可达）</td><td>单行计数器 + UPDATE（竞态 / 可篡改）；SECURITY DEFINER RPC（杀鸡用牛刀）</td></tr>
+<tr><td>22</td><td>线上版内容范围</td><td>只含游戏本体（#docs 文档区块剔除）</td><td>方案文档随包发布（用户要求「只要保留游戏内容」）</td></tr>
+</table>
+
+<h2>十一、存疑清单（按破坏面排序）</h2>
+<table>
+<tr><th style="width:36px">#</th><th>事项</th><th style="width:64px">优先级</th><th>影响</th><th style="width:210px">修复 / 验证</th></tr>
+<tr><td>1</td><td><b>小跳余量仅 0.3 m</b>（D 补丁后仍紧）</td><td><span class="tag tag-hi">P1</span></td><td>小跳是双手序专家技（松手窗 0.19 s × 按下窗 0.39 s），休闲玩家基本技 = 1 圈跳；教学车 1 已改教 1 圈</td><td>M1 验证；若实测太难，阈值再 +0.05 s 或牌下沿 8 → 8.5 m</td></tr>
+<tr><td>2</td><td><b>终局技法人类可达性</b>（bot 已验数学窗口，待真机手感）</td><td><span class="tag tag-hi">P1</span></td><td>bot 实测（20 种子/线）：稳健线（1 圈×4 + 车 5 拉满）20/20 均分 5.39；glory 线（车 4 晚按 3 圈，δ4 ∈ [1.25, 5.07−t_g45] = 0.32–1.22 s + 167 ms 松手）20/20 均分 5.67；用户已实测 4→5 可过。剩下的是人类手感：晚按 0.4–0.75 s 的节奏感</td><td>真机重点测项：glory 线的晚按窗</td></tr>
+<tr><td>3</td><td><b>2 圈结构性死区 + 贪心倒置</b></td><td><span class="tag tag-hi">P1</span></td><td>4→5 间隙整体落在 2 圈双节奏窗口之外（A 需 ≥3.43、B 需 ≤2.8）⇒ 7.0 分终局不可达，车 4 可选档实际是 {小跳, 1 圈, 3 圈}；最紧间距反而利好 3 圈，与曲线意图相反</td><td>(a) 接受（3 圈 = glory path）；(b) 终局间隙上移 3.8–4.5 s。真机后裁决</td></tr>
+<tr><td>4</td><td><b>修正语义实现刀锋</b></td><td><span class="tag tag-hi">P1</span></td><td>若实现成「信用 = 修正后角」，0.9 圈松手 + 前补刷分复活，前十四轮部分白烤</td><td>按 min() cap 规则写；单测覆盖 144° / 324° 两例</td></tr>
+<tr><td>5</td><td>爬升段轻触的冻结语义</td><td><span class="tag tag-md">P2</span></td><td>不冻结则爬升段修正被 360°/s 实时覆盖 = 空操作；冻结的副作用：0 圈满高度 = 封顶 5.0 分的保守打法（不 dominant）</td><td>M1 定语义；若 5.0 分太强，爬升段轻触加价 −1 圈</td></tr>
+<tr><td>6</td><td>167 ms 松手窗口 vs 人类精度</td><td><span class="tag tag-md">P2</span></td><td>bot 量化：松手噪声 ≤ ±80 ms 不轻触可过（40/40）；±160 ms 不轻触 0/40、带轻触 40/40 ⇒ 轻触是基本技组成部分；移动端触摸延迟每 50 ms，窗口再窄 30%</td><td>pointer events + touch-action: none（已入 §8）；真机测「带轻触通关率」而非「不轻触成功率」</td></tr>
+<tr><td>7</td><td>~~顶格 5 cm 余速 + 广告牌盲税~~ <b>已销项（v2.3）</b></td><td><span class="tag tag-lo">P2 ✓</span></td><td>M2 广告牌改为深色剪影面板 + 双支架（与 3.2 m 碰撞盒同宽），远距离高对比可见；按满党的顶牌赌局不再盲赌</td><td>已由 M2 面板化广告牌兑现；真机可复核剪影可见距离</td></tr>
+<tr><td>8</td><td>单局 5–31 s + 仅存最高分</td><td><span class="tag tag-lo">P2</span></td><td>留存风险（产品层，非机制层）</td><td>可选轻长期目标：今日最佳 / 五连计数</td></tr>
+<tr><td>9</td><td>~~结算屏对接口径已变~~ <b>已销项（v2.3）</b></td><td><span class="tag tag-lo">P2 ✓</span></td><td>合同从「十跳均值」改为「全部起跳均值（≤5 次）」，M2 已按此实现并联调；另新增全网开局次数行（§13.4）</td><td>已随 M2 上线；真机核对 apex / 圈数 / 均值 / n-5</td></tr>
+<tr><td>10</td><td>对向车速 60–150 km/h 未确认</td><td><span class="tag tag-lo">P2</span></td><td>只影响距离换算与卷轴视觉，不影响力学（车速对难度近装饰）</td><td>确认后重算 d = t_g × 闭合速度表</td></tr>
+</table>
+<p style="font-size:13px;color:var(--ink3)">已销项：车高 P0（1.5 / 1.8 m 已确认）、评分公式 / 难度曲线 / 操作模型 / 会话结构（均已签收）、广告牌盲税 #7（M2 剪影面板）、结算屏合同 #9（M2 联调）。<b>M2 交付后新增待验项</b>：① 1 圈 + 轻触的基本技手感（人类基本线）；② glory 线晚按 0.4–0.75 s 节奏感；③ 小跳双手序接受度；④ 终局过渡窗（车 4 落地 → 车 5 按下）；⑤ 全网计数在弱网下的降级体验。</p>
+
+<h2>十二、交付状态与下一步</h2>
+<ol>
+<li><b>已交付</b>：M1 灰盒原型（逻辑回归 46/46）→ M2 像素风完整版（同逻辑 + 素材接入 + 云埋点）→ 发布上线 <a href="https://stunt-racer.app.workbuddy.host/">stunt-racer.app.workbuddy.host</a>。机制层经 6 组 bot 压测无需重烤；</li>
+<li><b>真机试玩线上版</b>（当前唯一主线）——按存疑清单销项：1 圈 + 轻触的基本技手感、glory 线晚按 0.4–0.75 s 的节奏感、小跳双手序接受度、修正扣分的可见性、终局过渡窗（车 4 落地 → 车 5 按下）；</li>
+<li>（可选）真机玩滑雪大冒险验轻触修正手感，校准 30°/tap 步长与 4–5 taps/s 的速率假设；</li>
+<li>（可选）素材库补广告牌像素图（现为程序绘制的剪影面板，与碰撞盒同宽，远处可见性已达标）；10 辆版留作「加长模式」备选开关（决策日志 #17 已存档，不动主链路）。</li>
+</ol>
+
+<h2>十三、M2 交付与上线记录（v2.3）</h2>
+
+<h3>13.1 交付物</h3>
+<table>
+<tr><th style="width:300px">文件</th><th>说明</th></tr>
+<tr><td>赛车特技小游戏_M2_像素风_2026-10-18.html</td><td>446.8KB 单文件 = 线上同源版。逻辑层与 M1 逐字一致（回归可对该文件直接跑 46/46），浏览器层按素材重写；SDK / 素材全部内嵌，零外部依赖</td></tr>
+<tr><td>m2_assets/（player / oncoming / cover ×2）</td><td>素材处理管线产物（40 色量化 PNG + 1920 母版封面）</td></tr>
+<tr><td>.workbuddy/process_sprites.py / process_cover.py</td><td>素材处理脚本（棋盘格抠透明 / 去水印 / 量化 / 烤按钮）</td></tr>
+<tr><td>.workbuddy/m2_render_check.js / m2_screens_check.js</td><td>无头渲染验证 + 线上双屏计数验证（playwright + msedge）</td></tr>
+</table>
+
+<h3>13.2 素材处理管线（7 张用户素材）</h3>
+<ul>
+<li><b>车图背景是灰白棋盘格</b>（原图透明通道被展平）：洪水填充种子从四角进、白色判定放宽至 ~#C9C9C7、5×5 密度滤波去 JPEG 边缘噪点；水印 = 左下深色小连通域，按密度差清除；</li>
+<li><b>量化 40 色无抖动</b>：player 310K→40K（1348×394，3.42:1 楔形跑车朝右）、oncoming 599K→67K（1394×523，2.67:1 棕色 MPV 朝左）；</li>
+<li><b>封面</b>：右下「豆包AI生成」水印用左侧同行土地纹理补丁覆盖（护栏浅灰带会误入检测，限定 y&gt;1000）；土地带烤入 192×50 像素按钮（深框 #1a1210 + 红 face #c41c29 + 顶光 + 金三角 + msyhbd 阈值二值化 ×2.4 NEAREST 放大）；1440×810 + 64 色 = 135K；</li>
+<li><b>标题屏</b>：封面全幅作背景（大标题 / 双车 / VS 均在图中），DOM 只叠 3 行说明（道路暗带）+ 与烤入按钮同坐标的透明热区 + 呼吸光晕 + 最高分 chips；旧底部渐变遮罩删除（修「渐变遮车」）。</li>
+</ul>
+
+<h3>13.3 排查修复记录（4 项，均有回归断言或线上复验）</h3>
+<table>
+<tr><th style="width:40px">#</th><th style="width:130px">问题</th><th>根因与修复</th></tr>
+<tr><td>1</td><td><b>空格焦点 bug</b>（高危）</td><td>鼠标点开始后按钮保留焦点 ⇒ 按空格触发按钮默认行为 = 重开新局而非起跳。修：keydown 任何键先 blur 焦点按钮（pointerdown 里 blur 无效——焦点在 mousedown 默认动作时才应用）。渲染检查有显式断言</td></tr>
+<tr><td>2</td><td><b>警示窗截断</b></td><td>对向车速 60–150 km/h 随机 ⇒ 闭合 33–58 m/s，固定 55m 出场阈值 ⇒ 最快车仅提前 0.94 s 入场，横幅 / 倒计时 / 屏外箭头全被砍到不足 1s。修：出场距离 = max(55, warnLead×闭合速度+8)，M1/M2 双同步，10 种子断言（激活时刻 = 相遇前 2s，最大偏差 8.3 ms = 1 个物理步长）</td></tr>
+<tr><td>3</td><td><b>横幅遮视野</b>（用户反馈）</td><td>原置底部中央。改为画面上方「广告牌上沿（canvas y≈170 = 舞台高 31.48%）↔ 得分下沿」带内，底边贴上沿上方 10px 向上展开（translate(-50%,-100%)，自适应高度永不压广告牌）；小舞台降级时贴得分条下沿</td></tr>
+<tr><td>4</td><td><b>全网计数双屏缺失</b>（用户反馈）</td><td>① 坠毁屏漏加数据行（只加在通关屏）；② 云 SDK 走 jsdelivr CDN 在用户网络不可达（ERR_CONNECTION_CLOSED）⇒ 读取失败降级「—」。修：SDK 内联进 HTML（零外部依赖）+ 坠毁屏补行 + refreshGcount 兜底扩展 crash 模式。线上实测双屏均显示真实计数</td></tr>
+</table>
+
+<h3>13.4 云埋点设计（全网开局次数）</h3>
+<ul>
+<li><b>表</b>：<code>game_starts(id bigint identity, created_at timestamptz default now())</code>——insert-only 事件表，每局开局插一行，计数 = COUNT(*)。无 UPDATE/DELETE 策略 ⇒ <b>只能加行不能改数</b>（防刷分篡改）、无并发竞态、不需要 SECURITY DEFINER；</li>
+<li><b>RLS</b>：公开 SELECT + 公开 INSERT（WITH CHECK true），anon / authenticated 同权；</li>
+<li><b>前端</b>：bumpStarts() fire-and-forget insert（入口 = primaryAction：点开始 / 再来一局 / R 重开）；结算 / 坠毁屏展示时 refreshGcount() 拉最新；SDK 或网络失败 ⇒ 显示「—」不阻塞游戏；</li>
+<li><b>发布</b>：appId wbapp_1lOFnqP1VVBcpQmbi4hiiP（appName 赛车特技，domainPrefix stunt-racer，appType web）。</li>
+</ul>
+
+<h3>13.5 验证汇总</h3>
+<ul>
+<li>逻辑回归 46/46（M1/M2 双文件；含警示窗 10 种子断言、评分上限、半圈陷阱、修正 min() 语义）；</li>
+<li>无头渲染（playwright + msedge）：标题 / 警示 / 滞空 / 结算 / 坠毁 / 调试 / 移动端 7+ 截图零 pageerror；</li>
+<li>线上探针：写-读全链路（read → insert → read 实时 +1）；双屏计数均显示真实数字；剔除 #docs 后线上确认 stage=true、docs=false。</li>
+</ul>
+
+<footer>
+文件路径：docs/design-spec-v2.html ｜ 版本：v2 → v2.1（D 补丁：旋转阈值 1.25 → 1.40 s，午后）→ v2.2（5 辆版：carsToClear 10 → 5 + 交付前排查勘误，傍晚）→ v2.3（M2 像素风完整版交付 + 发布上线 stunt-racer.app.workbuddy.host + 云埋点全网开局计数 + 4 项排查修复，夜；详见 §13）｜ 关联：v1 方案（2026-10-16，已转向）、M0 灰盒原型（斜视角，不可复用）、M1 侧视灰盒原型（2026-10-18）、M2 像素风完整版（446.8KB 单文件，线上同源）、m2_assets/（素材处理产物）、回归 `.workbuddy/m1_logic_test.js`（46/46）、排查 bot `.workbuddy/m1_audit_bots.js`、渲染验证 `.workbuddy/m2_render_check.js` + `m2_screens_check.js` ｜ 本方案由 grill-me 拷问定稿 + M1/M2 实测反馈迭代，存疑清单随原型验证逐项销项。
+</footer>
+
+</div>
+</body>
+</html>
