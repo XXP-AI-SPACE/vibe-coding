@@ -61,11 +61,10 @@ body::before{
   box-shadow:0 0 0 60px rgba(0,229,192,.018),0 0 0 120px rgba(0,229,192,.012),0 0 0 180px rgba(0,229,192,.008);
   pointer-events:none;
 }
-.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.18em;color:var(--cyan);margin-bottom:22px;display:flex;align-items:center;gap:10px}
-.eyebrow::before{content:"";width:22px;height:1px;background:var(--cyan)}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.18em;color:var(--ink);margin-bottom:22px}
 h1{font-size:clamp(46px,8.5vw,104px);font-weight:700;letter-spacing:-.055em;line-height:.96}
-h1 .dim{color:var(--ink-faint)}
-h1 .accent{color:var(--cyan)}
+.dim{color:var(--ink-faint)}
+.accent{color:var(--cyan)}
 .hero-sub{margin-top:26px;display:flex;flex-wrap:wrap;align-items:center;gap:18px 30px}
 .hero-sub p{font-size:clamp(15px,2vw,18px);color:var(--ink-dim);max-width:520px;text-wrap:pretty}
 .hero-stats{display:flex;gap:34px;margin-top:44px;flex-wrap:wrap}
@@ -177,10 +176,10 @@ footer a:hover{color:var(--cyan)}
 <div class="wrap">
 
 <header class="hero">
-  <div class="eyebrow">XXP AI SPACE</div>
-  <h1>BUID<br>EVERYTHING <span class="accent">YOU WANT</span>.</h1>
+  <div class="eyebrow">—XXP AI SPACE—</div>
+  <h1>BUILD<br><span class="accent">EVERYTHING</span> YOU WANT</h1>
   <div class="hero-sub">
-    <p>启【创造者】模式</p>
+    <p>开启【<span class="accent">创造者</span>】模式</p>
   </div>
   <div class="hero-stats">
     <div class="stat"><div class="n">03<em>.</em></div><div class="l">PROJECTS</div></div>
