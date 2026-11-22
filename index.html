@@ -165,10 +165,11 @@ h1{font-size:clamp(46px,8.5vw,104px);font-weight:700;letter-spacing:-.055em;line
 .thumb{
   aspect-ratio:16/10;margin:0 22px;border:1px solid var(--line);position:relative;overflow:hidden;background:#080D16;
 }
-.thumb iframe{
-  position:absolute;top:0;left:0;width:1440px;height:900px;transform:scale(var(--scale,0.2));transform-origin:top left;
-  border:0;pointer-events:none;opacity:.9;
+.thumb img{
+  position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
+  display:block;opacity:.92;transition:opacity .3s,transform .3s;
 }
+.card:hover .thumb img{opacity:1;transform:scale(1.03)}
 .thumb::after{
   content:"";position:absolute;inset:0;
   background:linear-gradient(180deg,transparent 55%,rgba(8,13,22,.75));pointer-events:none;
@@ -230,7 +231,6 @@ footer a:hover{color:var(--accent)}
   .hud .sys .count{display:none}
   .hero{padding:60px 0 44px}
   .hero-stats{gap:24px}
-  .thumb iframe{--scale:0.28}
 }
 </style>
 </head>
@@ -271,8 +271,9 @@ footer a:hover{color:var(--accent)}
 
   <article class="card">
     <div class="card-top"><span class="cid">NO.001</span><span class="ctype">SOCIAL</span></div>
-    <div class="thumb" data-thumb="projects/life-roaming-map/index.html">
-      <div class="badge">LIVE EMBED / H5</div>
+    <div class="thumb">
+      <img src="projects/life-roaming-map/preview.png" alt="人生漫游地图 H5 预览" loading="lazy">
+      <div class="badge">PREVIEW / H5</div>
     </div>
     <div class="card-body">
       <h3>人生漫游地图</h3>
@@ -284,8 +285,9 @@ footer a:hover{color:var(--accent)}
 
   <article class="card" style="--accent:var(--violet)">
     <div class="card-top"><span class="cid">NO.002</span><span class="ctype">GAME</span></div>
-    <div class="thumb" data-thumb="projects/stunt-racer/index.html">
-      <div class="badge">LIVE EMBED / GAME</div>
+    <div class="thumb">
+      <img src="projects/stunt-racer/preview.png" alt="赛车特技游戏预览" loading="lazy">
+      <div class="badge">PREVIEW / GAME</div>
     </div>
     <div class="card-body">
       <h3>赛车特技</h3>
@@ -297,8 +299,9 @@ footer a:hover{color:var(--accent)}
 
   <article class="card" style="--accent:var(--amber)">
     <div class="card-top"><span class="cid">NO.003</span><span class="ctype">TOOL</span></div>
-    <div class="thumb" data-thumb="projects/dsh-snip/index.html">
-      <div class="badge">LIVE EMBED / DEMO</div>
+    <div class="thumb">
+      <img src="projects/dsh-snip/preview.png" alt="DSH-SNIP 插件演示预览" loading="lazy">
+      <div class="badge">PREVIEW / DEMO</div>
     </div>
     <div class="card-body">
       <h3>DSH-SNIP</h3>
@@ -381,20 +384,6 @@ footer a:hover{color:var(--accent)}
   }
   document.getElementById('closeBtn').addEventListener('click',close);
   document.addEventListener('keydown',function(e){if(e.key==='Escape'&&vw.classList.contains('open'))close()});
-
-  document.querySelectorAll('[data-thumb]').forEach(function(box){
-    var f=document.createElement('iframe');
-    f.src=box.dataset.thumb;
-    f.setAttribute('loading','lazy');
-    f.setAttribute('tabindex','-1');
-    f.title='Preview';
-    var bw=box.clientWidth||360;
-    var bh=box.clientHeight||225;
-    var scale=Math.max(bw/1440,bh/900);
-    f.style.setProperty('--scale',scale);
-    f.style.transform='scale('+scale+')';
-    box.insertBefore(f,box.firstChild);
-  });
 })();
 </script>
 </body>
