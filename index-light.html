@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>XXP-AI-SPACE — Selected Works (Light)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F4F6FA;
+  --panel:#FFFFFF;
+  --panel-2:#F9FBFD;
+  --line:rgba(28,48,76,.13);
+  --line-strong:rgba(15,118,110,.46);
+  --ink:#15202E;
+  --ink-dim:#586A80;
+  --ink-faint:#8A9AAD;
+  --accent:#0F766E;
+  --amber:#C4770A;
+  --violet:#6B58C9;
+  --mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+  --sans:'Space Grotesk','Segoe UI',system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.6;min-height:100vh;
+  background-image:
+    linear-gradient(rgba(30,55,85,.045) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(30,55,85,.045) 1px,transparent 1px),
+    radial-gradient(ellipse 60% 40% at 82% 0%,rgba(15,118,110,.075),transparent 70%);
+  background-size:48px 48px,48px 48px,100% 100%;
+}
+body::before{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:60;
+  background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(15,30,50,.025) 4px);opacity:.5;
+}
+.wrap{max-width:1240px;margin:0 auto;padding:0 32px}
+
+/* HUD */
+.hud{
+  border-bottom:1px solid var(--line);padding:14px 0;
+  display:flex;align-items:center;justify-content:space-between;gap:20px;
+  font-family:var(--mono);font-size:11px;letter-spacing:.08em;color:var(--ink-dim);
+  position:sticky;top:0;background:rgba(248,250,252,.92);backdrop-filter:blur(14px);z-index:40;
+}
+.hud .id{display:flex;align-items:center;gap:12px;color:var(--ink)}
+.hud .id b{font-weight:600}
+.hud .id .mark{color:var(--accent)}
+.hud .sys{display:flex;gap:24px;align-items:center}
+.hud .dot{width:6px;height:6px;background:var(--accent);border-radius:50%;display:inline-block;margin-right:7px;box-shadow:0 0 9px rgba(15,118,110,.5)}
+.hud .clock{color:var(--ink-faint)}
+
+/* hero */
+.hero{padding:88px 0 60px;border-bottom:1px solid var(--line);position:relative;overflow:hidden}
+.hero::after{
+  content:"";position:absolute;right:-140px;top:20px;width:480px;height:480px;
+  border:1px solid rgba(15,118,110,.15);border-radius:50%;
+  box-shadow:0 0 0 60px rgba(15,118,110,.03),0 0 0 120px rgba(15,118,110,.02),0 0 0 180px rgba(15,118,110,.014);
+  pointer-events:none;
+}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.18em;color:var(--ink);margin-bottom:22px}
+h1{font-size:clamp(46px,8.5vw,104px);font-weight:700;letter-spacing:-.055em;line-height:.96}
+.dim{color:var(--ink-faint)}
+.accent{color:var(--accent)}
+.hero-sub{margin-top:26px;display:flex;flex-wrap:wrap;align-items:center;gap:18px 30px}
+.hero-sub p{font-size:clamp(15px,2vw,18px);color:var(--ink-dim);max-width:520px;text-wrap:pretty}
+.hero-stats{display:flex;gap:34px;margin-top:44px;flex-wrap:wrap}
+.stat .n{font-family:var(--mono);font-size:30px;font-weight:500;letter-spacing:-.04em;color:var(--ink)}
+.stat .n em{font-style:normal;color:var(--accent)}
+.stat .l{font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--ink-faint);margin-top:2px}
+
+/* section */
+.sec-head{display:flex;align-items:baseline;gap:16px;padding:58px 0 24px}
+.sec-num{font-family:var(--mono);font-size:12px;color:var(--accent)}
+.sec-head h2{font-size:24px;font-weight:600;letter-spacing:-.025em}
+.sec-head .note{font-family:var(--mono);font-size:11px;color:var(--ink-faint);margin-left:auto}
+
+/* works */
+.works{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+.card{
+  border:1px solid var(--line);background:var(--panel);position:relative;
+  display:flex;flex-direction:column;transition:border-color .25s,transform .25s,background .25s,box-shadow .25s;
+  overflow:hidden;
+}
+.card:hover{border-color:var(--line-strong);transform:translateY(-4px);background:var(--panel-2);box-shadow:0 12px 30px rgba(28,48,76,.09)}
+.card::before{content:"";position:absolute;top:0;left:0;right:0;height:2px;background:var(--accent);opacity:.85;transform:scaleX(0);transform-origin:left;transition:transform .3s}
+.card:hover::before{transform:scaleX(1)}
+.card-top{padding:22px 22px 18px;display:flex;justify-content:space-between;align-items:flex-start}
+.cid{font-family:var(--mono);font-size:11px;letter-spacing:.1em;color:var(--accent)}
+.ctype{font-family:var(--mono);font-size:10px;letter-spacing:.08em;color:var(--ink-faint);border:1px solid var(--line);padding:4px 8px}
+.thumb{
+  aspect-ratio:16/10;margin:0 22px;border:1px solid var(--line);position:relative;overflow:hidden;background:#080D16;
+}
+.thumb iframe{
+  position:absolute;top:0;left:0;width:1440px;height:900px;transform:scale(var(--scale,0.2));transform-origin:top left;
+  border:0;pointer-events:none;opacity:.9;
+}
+.thumb::after{
+  content:"";position:absolute;inset:0;
+  background:linear-gradient(180deg,transparent 55%,rgba(8,13,22,.75));pointer-events:none;
+}
+.thumb .badge{
+  position:absolute;bottom:9px;left:10px;z-index:2;font-family:var(--mono);font-size:9px;letter-spacing:.1em;
+  color:#5DCAA5;border:1px solid rgba(93,202,165,.5);background:rgba(5,8,15,.85);padding:3px 7px;
+}
+.card-body{padding:20px 22px 24px;flex:1;display:flex;flex-direction:column}
+.card h3{font-size:22px;font-weight:600;letter-spacing:-.03em;margin-bottom:8px}
+.card .desc{font-size:13px;color:var(--ink-dim);line-height:1.6;flex:1;text-wrap:pretty}
+.tags{display:flex;flex-wrap:wrap;gap:6px;margin:16px 0 20px}
+.tags span{font-family:var(--mono);font-size:10px;color:var(--ink-faint);border:1px solid var(--line);padding:3px 7px}
+.launch{
+  display:flex;align-items:center;justify-content:space-between;
+  font-family:var(--mono);font-size:11px;letter-spacing:.1em;color:var(--ink);
+  background:transparent;border:1px solid var(--line-strong);padding:11px 14px;
+  cursor:pointer;transition:all .2s;width:100%;
+}
+.launch:hover{background:var(--accent);color:#FFFFFF;border-color:var(--accent)}
+.launch .go{font-size:15px;transition:transform .2s}
+.launch:hover .go{transform:translateX(4px)}
+
+/* fullscreen viewer */
+.viewer{
+  position:fixed;inset:0;z-index:100;background:rgba(244,246,250,.98);
+  display:none;flex-direction:column;padding:16px 22px 22px;
+}
+.viewer.open{display:flex}
+.viewer-bar{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-bottom:14px;border-bottom:1px solid var(--line);font-family:var(--mono);font-size:11px;letter-spacing:.08em;color:var(--ink-dim)}
+.viewer-bar .name{color:var(--ink)}
+.viewer-bar .name span{color:var(--accent);margin-right:10px}
+.viewer-bar button{
+  background:transparent;border:1px solid var(--line-strong);color:var(--ink);
+  font-family:var(--mono);font-size:11px;letter-spacing:.08em;padding:8px 14px;cursor:pointer;transition:all .2s;
+}
+.viewer-bar button:hover{background:var(--accent);color:#FFFFFF;border-color:var(--accent)}
+.viewer-frame{flex:1;margin-top:14px;border:1px solid var(--line);background:#fff;position:relative;overflow:hidden}
+.viewer-frame iframe{width:100%;height:100%;border:0;display:block;background:#fff}
+
+/* about */
+.about{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:40px;padding:8px 0 0}
+.about h3{font-size:28px;font-weight:600;letter-spacing:-.03em;margin-bottom:16px}
+.about p{color:var(--ink-dim);font-size:14px;line-height:1.8;text-wrap:pretty}
+.kv{border-top:1px solid var(--line)}
+.kv .row{display:flex;justify-content:space-between;gap:20px;border-bottom:1px solid var(--line);padding:13px 2px;font-family:var(--mono);font-size:11px}
+.kv .row .k{color:var(--ink-faint);letter-spacing:.1em}
+.kv .row .v{color:var(--ink)}
+
+/* footer */
+footer{border-top:1px solid var(--line);margin-top:66px;padding:26px 0 46px;font-family:var(--mono);font-size:11px;color:var(--ink-faint);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+footer a{color:var(--ink-dim);text-decoration:none;transition:color .2s}
+footer a:hover{color:var(--accent)}
+
+@media(max-width:980px){
+  .works{grid-template-columns:1fr}
+  .about{grid-template-columns:1fr;gap:28px}
+  .hud .sys span:nth-child(2){display:none}
+  .hero{padding:60px 0 44px}
+  .hero-stats{gap:24px}
+  .thumb iframe{--scale:0.28}
+}
+</style>
+</head>
+<body>
+
+<div class="hud">
+  <div class="id"><span class="mark">◈</span><b>XXP-AI-SPACE</b><span style="color:var(--ink-faint)">/ SELECTED WORKS</span></div>
+  <div class="sys">
+    <span><i class="dot"></i>ALL SYSTEMS NOMINAL</span>
+    <span>3 PROJECTS INDEXED</span>
+    <span class="clock" id="clock">--:--:--</span>
+  </div>
+</div>
+
+<div class="wrap">
+
+<header class="hero">
+  <div class="eyebrow">—XXP AI SPACE—</div>
+  <h1>BUILD<br><span class="accent">EVERYTHING</span> YOU WANT</h1>
+  <div class="hero-sub">
+    <p>开启【<span class="accent">创造者</span>】模式</p>
+  </div>
+  <div class="hero-stats">
+    <div class="stat"><div class="n">03<em>.</em></div><div class="l">PROJECTS</div></div>
+    <div class="stat"><div class="n">03<em>.</em></div><div class="l">DOMAINS</div></div>
+    <div class="stat"><div class="n">100<em>%</em></div><div class="l">INTERACTIVE</div></div>
+  </div>
+</header>
+
+<div class="sec-head"><span class="sec-num">01</span><h2>精选项目</h2><span class="note">点击 LAUNCH 在当前页运行</span></div>
+
+<div class="works">
+
+  <article class="card" style="--accent:var(--accent)">
+    <div class="card-top"><span class="cid">NO.001</span><span class="ctype">SOCIAL</span></div>
+    <div class="thumb" data-thumb="projects/life-roaming-map/index.html">
+      <div class="badge">LIVE EMBED / H5</div>
+    </div>
+    <div class="card-body">
+      <h3>人生漫游地图</h3>
+      <p class="desc">给自己看的空间记忆工具。一张照片、一句话，30 秒点亮一个地方。静态自绘中国地图，不接任何地图 SDK，H5 版可直接体验。</p>
+      <div class="tags"><span>Mini Program</span><span>Canvas 2D</span><span>CloudBase</span><span>H5 Demo</span></div>
+      <button class="launch" data-open="projects/life-roaming-map/index.html" data-name="人生漫游地图 / H5 体验版"><span>LAUNCH DEMO</span><span class="go">↗</span></button>
+    </div>
+  </article>
+
+  <article class="card" style="--accent:var(--violet)">
+    <div class="card-top"><span class="cid">NO.002</span><span class="ctype">GAME</span></div>
+    <div class="thumb" data-thumb="projects/stunt-racer/index.html">
+      <div class="badge">LIVE EMBED / GAME</div>
+    </div>
+    <div class="card-body">
+      <h3>赛车特技</h3>
+      <p class="desc">横版卷轴像素风特技驾驶。长按起跳、空中前滚翻，躲过 5 辆失灵来车即通关，按跳跃高度与翻滚圈数打分。</p>
+      <div class="tags"><span>Single-file HTML</span><span>Canvas</span><span>Pixel Art</span><span>Keyboard</span></div>
+      <button class="launch" data-open="projects/stunt-racer/index.html" data-name="赛车特技 / 像素版"><span>PLAY NOW</span><span class="go">↗</span></button>
+    </div>
+  </article>
+
+  <article class="card" style="--accent:var(--amber)">
+    <div class="card-top"><span class="cid">NO.003</span><span class="ctype">TOOL</span></div>
+    <div class="thumb" data-thumb="projects/dsh-snip/index.html">
+      <div class="badge">LIVE EMBED / DEMO</div>
+    </div>
+    <div class="card-body">
+      <h3>DSH-SNIP</h3>
+      <p class="desc">DeepSeek Harness 的 Snipaste 风格截图标注插件。全局 F1 唤起，整屏压暗框选，红框文字标注后自动投递到对话框。</p>
+      <div class="tags"><span>PowerShell</span><span>WinForms</span><span>Global Hotkey</span><span>Windows</span></div>
+      <button class="launch" data-open="projects/dsh-snip/index.html" data-name="DSH-SNIP / 截图标注插件"><span>LAUNCH DEMO</span><span class="go">↗</span></button>
+    </div>
+  </article>
+
+</div>
+
+<div class="sec-head"><span class="sec-num">02</span><h2>关于</h2><span class="note">ABOUT THIS INDEX</span></div>
+<div class="about">
+  <div>
+    <h3>一个入口，<br>三个可运行的作品。</h3>
+    <p>这里不是截图墙。每张卡片下方的预览都是真实的页面实例，点击 LAUNCH 即可在当前标签页内完整运行——游戏能玩、地图能点、插件演示能切换步骤。</p>
+  </div>
+  <div class="kv">
+    <div class="row"><span class="k">DEPLOY</span><span class="v">Cloudflare Pages / Git push auto deploy</span></div>
+    <div class="row"><span class="k">STRUCTURE</span><span class="v">index.html + projects/*</span></div>
+    <div class="row"><span class="k">SOURCE</span><span class="v">github.com/XXP-AI-SPACE</span></div>
+    <div class="row"><span class="k">STACK</span><span class="v">Vanilla HTML / CSS / JS · no build step</span></div>
+    <div class="row"><span class="k">VERSION</span><span class="v">v0.4 — light theme preview</span></div>
+  </div>
+</div>
+
+<footer><span>XXP-AI-SPACE / SELECTED WORKS / 2026</span><span><a href="https://github.com/XXP-AI-SPACE" target="_blank" rel="noopener">GITHUB ↗</a> &nbsp;·&nbsp; <a href="#" onclick="return false">BACK TO TOP ↑</a></span></footer>
+</div>
+
+<div class="viewer" id="viewer">
+  <div class="viewer-bar">
+    <div class="name"><span>◈ RUNNING</span><span id="viewerName">—</span></div>
+    <button id="closeBtn">CLOSE [ESC] ✕</button>
+  </div>
+  <div class="viewer-frame"><iframe id="viewerFrame" title="Project demo" allow="autoplay; fullscreen"></iframe></div>
+</div>
+
+<script>
+(function(){
+  var clock=document.getElementById('clock');
+  function tick(){var d=new Date();clock.textContent=[d.getHours(),d.getMinutes(),d.getSeconds()].map(function(n){return String(n).padStart(2,'0')}).join(':')}
+  tick();setInterval(tick,1000);
+
+  var vw=document.getElementById('viewer');
+  var vf=document.getElementById('viewerFrame');
+  var vn=document.getElementById('viewerName');
+  document.querySelectorAll('[data-open]').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      vn.textContent=btn.dataset.name;
+      vf.src=btn.dataset.open;
+      vw.classList.add('open');
+      document.body.style.overflow='hidden';
+    });
+  });
+  function close(){
+    vw.classList.remove('open');
+    vf.src='about:blank';
+    document.body.style.overflow='';
+  }
+  document.getElementById('closeBtn').addEventListener('click',close);
+  document.addEventListener('keydown',function(e){if(e.key==='Escape'&&vw.classList.contains('open'))close()});
+
+  document.querySelectorAll('[data-thumb]').forEach(function(box){
+    var f=document.createElement('iframe');
+    f.src=box.dataset.thumb;
+    f.setAttribute('loading','lazy');
+    f.setAttribute('tabindex','-1');
+    f.title='Preview';
+    var bw=box.clientWidth||360;
+    var bh=box.clientHeight||225;
+    var scale=Math.max(bw/1440,bh/900);
+    f.style.setProperty('--scale',scale);
+    f.style.transform='scale('+scale+')';
+    box.insertBefore(f,box.firstChild);
+  });
+})();
+</script>
+</body>
+</html>
